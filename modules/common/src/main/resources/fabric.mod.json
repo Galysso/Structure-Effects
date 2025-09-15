@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "structures_features",
+	"version": "${version}",
+	"name": "Structures Features",
+	"description": "...",
+	"authors": [
+		"Galysso"
+	],
+	"contact": {
+		"homepage": "https://github.com/Galysso/structures_features",
+		"sources": "https://github.com/Galysso/structures_features"
+	},
+	"license": "ARR",
+	"icon": "modules/fabric/src/main/resources/assets/structures_features/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "galysso.structures_features.StructuresFeatures"
+		]
+	},
+	"mixins": [
+      "structures_features.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
