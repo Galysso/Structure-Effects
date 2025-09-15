@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-          "galysso.structures_features.StructuresFeatures"
+          "galysso.structures_features.StructuresFeaturesMain"
 		]
 	},
 	"mixins": [

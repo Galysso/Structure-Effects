@@ -1,8 +1,9 @@
 package galysso.structures_features;
 
 import galysso.structures_features.api.StructureRegistry;
+import galysso.structures_features.config.ModConfigs;
 import galysso.structures_features.config.ServerConfig;
-import galysso.structures_features.util.NetworkUtil;
+import galysso.structures_features.util.NetworkRegistry;
 import galysso.structures_features.util.ServerAccessor;
 import galysso.structures_features.util.StructureNaming;
 import me.fzzyhmstrs.fzzy_config.api.ConfigApiJava;
@@ -13,14 +14,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class StructuresFeatures implements ModInitializer {
-    public static final String MOD_ID = "structures_features";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-
-    public static ServerConfig SERVER_CONFIG;
+public class StructuresFeaturesMain implements ModInitializer {
+    private static ServerConfig SERVER_CONFIG;
 
 	@Override
 	public void onInitialize() {
@@ -30,6 +26,7 @@ public class StructuresFeatures implements ModInitializer {
             ServerAccessor.setServerInstance(server);
             if (SERVER_CONFIG == null) {
                 SERVER_CONFIG = ConfigApiJava.registerAndLoadConfig(ServerConfig::new, RegisterType.SERVER);
+                ModConfigs.setServer(SERVER_CONFIG.toData());
                 StructureNaming.get(server.getOverworld());
                 StructureNaming.init();
                 for (ServerWorld serverWorld : server.getWorlds()) {
@@ -41,10 +38,6 @@ public class StructuresFeatures implements ModInitializer {
             StructureRegistry.get(world);
         });
 
-        NetworkUtil.init();
+        NetworkRegistry.init();
 	}
-
-    public static Identifier identifier(String path) {
-        return Identifier.of(MOD_ID, path);
-    }
 }

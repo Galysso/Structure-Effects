@@ -6,10 +6,13 @@ archivesBaseName = "${rootProject.name}-fabric"
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    implementation project(":modules:common")
+
+    implementation    project(path: ":modules:common", configuration: "namedElements")
+    //developmentFabric project(path: ":modules:common", configuration: "namedElements")
 
     modImplementation "me.fzzyhmstrs:fzzy_config:${project.fabric_fzzy_config_version}"
 }

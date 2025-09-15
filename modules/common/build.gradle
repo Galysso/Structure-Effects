@@ -1,5 +1,16 @@
+plugins {
+    id 'java-library'
+    id 'fabric-loom' version '1.9.1'
+}
 
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
 
-plugins { id("java-library") }
-java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
+    compileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+}
