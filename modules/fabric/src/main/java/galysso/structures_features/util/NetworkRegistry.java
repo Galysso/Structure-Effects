@@ -1,18 +1,14 @@
 package galysso.structures_features.util;
 
-import galysso.structures_features.StructuresFeatures;
 import galysso.structures_features.network.StructureNamePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 
-public class NetworkUtil {
-    public static final Identifier STRUCTURE_NAME_PAYLOAD = StructuresFeatures.identifier("structure_name_payload");
+public class NetworkRegistry {
 
     public static void init() {
         PayloadTypeRegistry.playS2C().register(StructureNamePayload.ID, StructureNamePayload.CODEC);

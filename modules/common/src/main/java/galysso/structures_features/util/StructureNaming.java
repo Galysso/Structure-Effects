@@ -1,6 +1,7 @@
 package galysso.structures_features.util;
 
 import galysso.structures_features.StructuresFeatures;
+import galysso.structures_features.config.ModConfigs;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -18,13 +19,13 @@ public class StructureNaming extends PersistentState {
     private static Map<String, Map<String, Boolean>> consumedNames = new HashMap<>(); /* persistant */
 
     public static void init() {
-        for (var structuresSet : StructuresFeatures.SERVER_CONFIG.structuresNames.entrySet()) {
-            for (String structureId : structuresSet.getValue().getLeft()) {
+        for (var structuresSet : ModConfigs.server().structuresNames().entrySet()) {
+            for (String structureId : structuresSet.getValue().structures) {
                 List<String> listOfNamesLists = listsTitlesByStructure.computeIfAbsent(structureId, k -> new ArrayList<>());
                 listOfNamesLists.add(String.valueOf(structuresSet.getKey()));
             }
             availableNames.put(structuresSet.getKey(), new ArrayList<>());
-            for (String name : structuresSet.getValue().getRight()) {
+            for (String name : structuresSet.getValue().names) {
                 if (!consumedNames.containsKey(structuresSet.getKey()) || !consumedNames.get(structuresSet.getKey()).containsKey(name)) {
                     availableNames.get(structuresSet.getKey()).add(name);
                 }
@@ -53,7 +54,7 @@ public class StructureNaming extends PersistentState {
                 namesList.set(index, namesList.getLast());
                 namesList.removeLast();
                 if (namesList.isEmpty()) {
-                    namesList.addAll(StructuresFeatures.SERVER_CONFIG.structuresNames.get(listTitle).getRight());
+                    namesList.addAll(ModConfigs.server().structuresNames().get(listTitle).names);
                     consumedNames.get(listTitle).clear();
                 }
                 consumedNames.computeIfAbsent(listTitle, k -> new HashMap<>()).put(selectedName, true);

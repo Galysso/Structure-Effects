@@ -1,5 +1,5 @@
 plugins {
-	id 'maven-publish'
+    id 'maven-publish'
 }
 
 version = project.mod_version
@@ -23,6 +23,8 @@ subprojects {
             sourceCompatibility = JavaVersion.VERSION_21
             targetCompatibility = JavaVersion.VERSION_21
         }
-        tasks.withType(JavaCompile).configureEach { options.release = 21 }
+        tasks.withType(JavaCompile).configureEach {
+            options.release = 21
+        }
     }
 }
