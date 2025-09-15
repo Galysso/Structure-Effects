@@ -65,7 +65,7 @@ public class ServerPlayerEntityMixin {
         world = newWorld;
 
         // Get the list of structures at the player position
-        List<StructureObject> structures = StructureRegistry.getStructuresAtPos(world, structureReferences, blockPos);
+        List<StructureObject> structures = StructureRegistry.getOrCreateStructuresAtPos(world, structureReferences, blockPos);
 
         /* // This piece of code can be useful for implementing specific structure effects (to be moved directly within StructureObject)
         System.out.println("Player is in structures: [");

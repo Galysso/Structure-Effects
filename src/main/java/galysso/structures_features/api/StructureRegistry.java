@@ -23,7 +23,7 @@ public class StructureRegistry extends PersistentState {
     private long counter;
     private Map<InstanceKey, StructureObject> structuresMap;
 
-    public static List<StructureObject> getStructuresAtPos(ServerWorld world, Map<Structure, LongSet> structureReferences, BlockPos pos) {
+    public static List<StructureObject> getOrCreateStructuresAtPos(ServerWorld world, Map<Structure, LongSet> structureReferences, BlockPos pos) {
         List<StructureObject> structures = new java.util.ArrayList<>();
 
         if (structureReferences == null) return structures;
@@ -33,7 +33,7 @@ public class StructureRegistry extends PersistentState {
 
             if (structureStart != StructureStart.DEFAULT) {
                 if (structureStart.getBoundingBox().contains(pos)) {
-                    StructureObject structureObject = getStructureObject(world, pos, structure);
+                    StructureObject structureObject = getOrCreateStructureObject(world, pos, structure);
                     structures.add(structureObject);
                 }
             }
@@ -42,7 +42,7 @@ public class StructureRegistry extends PersistentState {
     }
 
     @Nullable
-    public static StructureObject getStructureObject(ServerWorld world, BlockPos pos, Structure structure) {
+    public static StructureObject getOrCreateStructureObject(ServerWorld world, BlockPos pos, Structure structure) {
         StructureAccessor structureAccessor = world.getStructureAccessor();
         StructureStart structureStart = structureAccessor.getStructureAt(pos, structure);
         long structureChunkPos = new ChunkPos(structureStart.getPos().getStartPos()).toLong();
