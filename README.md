@@ -2,7 +2,7 @@
 **Structures Features** aims to propose a set of highly configurable features based on structures. It tries to be as efficient as possible in order to remain negligible in terms of performance impact.
 
 # Features implemented
-- Automatic structure naming with structures-dependant name sets
+- Automatic structure naming with structures-dependant names sets
 
 # Features planned
 - Support overlapping structures
