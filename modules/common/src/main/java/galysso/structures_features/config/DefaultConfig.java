@@ -1,6 +1,5 @@
 package galysso.structures_features.config;
 
-import java.util.Map;
 import java.util.Set;
 
 public class DefaultConfig {

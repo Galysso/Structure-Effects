@@ -3,8 +3,10 @@ package galysso.structures_features.mixin;
 import galysso.structures_features.api.StructureObject;
 import galysso.structures_features.api.StructureRegistry;
 import galysso.structures_features.network.StructureNamePayload;
+import galysso.structures_features.util.NetworkUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -65,7 +67,7 @@ public class ServerPlayerEntityMixin {
         world = newWorld;
 
         // Get the list of structures at the player position
-        List<StructureObject> structures = StructureRegistry.getStructuresAtPos(world, structureReferences, blockPos);
+        List<StructureObject> structures = StructureRegistry.getOrCreateStructuresAtPos(world, structureReferences, blockPos);
 
         /* // This piece of code can be useful for implementing specific structure effects (to be moved directly within StructureObject)
         System.out.println("Player is in structures: [");

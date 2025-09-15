@@ -8,10 +8,10 @@
 		"Galysso"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/Galysso/structures_features",
+		"sources": "https://github.com/Galysso/structures_features"
 	},
-	"license": "CC0-1.0",
+	"license": "ARR",
 	"icon": "assets/structures_features/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -20,7 +20,7 @@
 		]
 	},
 	"mixins": [
-      "StructuresFeatures.mixins.json"
+      "structures_features.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.17.2",
