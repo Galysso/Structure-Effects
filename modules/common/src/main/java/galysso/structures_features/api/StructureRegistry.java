@@ -4,18 +4,18 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.PersistentState;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.structure.Structure;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class StructureRegistry extends PersistentState {
     private record InstanceKey(long startChunk, String structureId) { }
@@ -23,8 +23,12 @@ public class StructureRegistry extends PersistentState {
     private long counter;
     private Map<InstanceKey, StructureObject> structuresMap;
 
-    public static List<StructureObject> getOrCreateStructuresAtPos(ServerWorld world, Map<Structure, LongSet> structureReferences, BlockPos pos) {
-        List<StructureObject> structures = new java.util.ArrayList<>();
+    // Cached player information
+    private record PlayerData(BlockPos pos, Map<Long, StructureObject> structures) { }
+    private Map<UUID, PlayerData> playerDataCache = new HashMap<UUID, PlayerData>();
+
+    public static Set<StructureObject> getOrCreateStructuresAtPos(ServerWorld world, Map<Structure, LongSet> structureReferences, BlockPos pos) {
+        Set<StructureObject> structures = new HashSet<>();
 
         if (structureReferences == null) return structures;
 

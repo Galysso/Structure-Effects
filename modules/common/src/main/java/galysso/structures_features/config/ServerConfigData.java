@@ -3,8 +3,6 @@ package galysso.structures_features.config;
 import java.util.*;
 
 public final class ServerConfigData {
-
-    // Une entrée: (structures, noms)
     public static final class NamesEntry {
         public final Set<String> structures;
         public final Set<String> names;

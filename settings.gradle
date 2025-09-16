@@ -11,8 +11,6 @@ pluginManagement {
     }
 }
 
-rootProject.name = "structures_features"
-
 include(
     ":modules:common",
     ":modules:fabric"/*,

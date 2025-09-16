@@ -12,11 +12,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-@ConvertFrom(fileName = "server_config.toml", folder = "structures_features") // corrige le dossier si besoin
-public class ServerConfig extends Config {
+@ConvertFrom(fileName = "server_names_sets.toml", folder = "structures_features")
+public class ServerNamesSetsConfig extends Config {
 
-    public ServerConfig() {
-        super(StructuresFeatures.identifier("server_config"));
+    public ServerNamesSetsConfig() {
+        super(StructuresFeatures.identifier("server_names_sets"));
     }
 
     @Override @NotNull
