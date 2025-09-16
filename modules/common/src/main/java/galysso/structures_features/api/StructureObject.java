@@ -2,25 +2,53 @@ package galysso.structures_features.api;
 
 import galysso.structures_features.util.StructureNaming;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
-public class StructureObject {
+public final class StructureObject {
     private long id;
     private Identifier structureId;
     private String name;
+    private boolean nameIsMissing;
 
+    /* ----- CONSTRUCTORS ----- */
     public static StructureObject create(long id, Identifier structureId) {
         return new StructureObject(id, structureId, StructureNaming.getRandomNameForStructure(structureId.toString()));
-    }
-
-    public boolean equals(StructureObject other) {
-        return other.id == this.id;
     }
 
     private StructureObject(long id, Identifier structureId, String name) {
         this.id = id;
         this.structureId = structureId;
         this.name = name == null ? "" : name;
+    }
+
+    /* ----- IMPLEMENTATIONS ----- */
+    public void join(ServerPlayerEntity player) {
+
+    }
+
+    public void leave(ServerPlayerEntity player) {
+
+    }
+
+    /* ----- FAST IDENTIFICATION ----- */
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof StructureObject otherStructureObject)) return false;
+        return otherStructureObject.id == this.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
+    }
+
+    /* ----- GETTERS / SETTERS ----- */
+
+    public long getId() {
+        return id;
     }
 
     public Identifier getStructureId() {
@@ -34,6 +62,8 @@ public class StructureObject {
     public String getName() {
         return name;
     }
+
+    /* ----- NBT SERIALIZATION ----- */
 
     void writeNbt(NbtCompound nbt) {
         nbt.putLong("id", id);
@@ -51,6 +81,10 @@ public class StructureObject {
         }
 
         String name = nbt.contains("name") ? nbt.getString("name") : "";
+
+        if (name .isEmpty()) {
+            name = StructureNaming.getRandomNameForStructure(sid.toString());
+        }
 
         StructureObject obj = new StructureObject(id, sid, name);
         return obj;

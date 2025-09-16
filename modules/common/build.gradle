@@ -3,6 +3,8 @@ plugins {
     id 'fabric-loom' version '1.9.1'
 }
 
+archivesBaseName = "${project.name}"
+
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
     withSourcesJar()
@@ -13,4 +15,6 @@ dependencies {
     mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
     compileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    compileOnly "net.fabricmc:sponge-mixin:${project.mixin_version}"
 }
