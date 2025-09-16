@@ -3,9 +3,10 @@
 
 # Features implemented
 - Automatic structure naming with structures-dependant names sets
+- Sends welcome and farewell messages when entering / leaving a structure
+- Supports overlapping structures
 
 # Features planned
-- Support overlapping structures
 - Automatic effect distribution and clearance upon entering / leaving a structure
 
 # Setup
