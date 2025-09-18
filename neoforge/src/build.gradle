@@ -40,14 +40,6 @@ dependencies {
     modImplementation "me.fzzyhmstrs:fzzy_config:${project.neoforge_fzzy_config_version}"
 }
 
-processResources {
-    inputs.property 'version', project.version
-
-    filesMatching('META-INF/neoforge.mods.toml') {
-        expand version: inputs.properties.version
-    }
-}
-
 shadowJar {
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'
