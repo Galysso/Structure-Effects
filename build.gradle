@@ -1,30 +1,96 @@
 plugins {
-    id 'maven-publish'
+    id 'dev.architectury.loom' apply false
+    id 'architectury-plugin'
+    id 'com.gradleup.shadow' apply false
 }
 
-version = project.mod_version
-group = project.maven_group
+architectury {
+    minecraft = project.minecraft_version
+}
+
+allprojects {
+    group = project.maven_group
+    version = project.mod_version
+}
 
 subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
+
+    base {
+        archivesName = "$project.archives_base_name-$project.display_name"
+    }
+
     repositories {
-        mavenCentral()
-        maven { url = "https://maven.fabricmc.net/" }
-        maven { url = "https://maven.quiltmc.org/repository/release" }
-        maven { url = "https://maven.neoforged.net/releases" }
         maven { url = "https://maven.fzzyhmstrs.me/" }
         maven { url = "https://api.modrinth.com/maven" }
-        mavenLocal()
+    }
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:$project.minecraft_version"
+        mappings loom.officialMojangMappings()
+    }
+
+    java {
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = 21
     }
 
     pluginManager.withPlugin("java") {
-        java {
-            toolchain { languageVersion = JavaLanguageVersion.of(21) }
-            withSourcesJar()
-            sourceCompatibility = JavaVersion.VERSION_21
-            targetCompatibility = JavaVersion.VERSION_21
-        }
-        tasks.withType(JavaCompile).configureEach {
-            options.release = 21
+        tasks.named('processResources') {
+            from(project.file('common/src/main/resources'))
+            expand([
+                author : findProperty("author"),
+                mod_version      : findProperty("mod_version"),
+                mod_id       : findProperty("mod_id"),
+                display_name : findProperty("display_name"),
+                mod_description  : findProperty("mod_description"),
+                license      : findProperty("license"),
+                homepage     : findProperty("homepage"),
+                sources      : findProperty("sources"),
+                icon_location : findProperty("icon_location"),
+                fabric_loader_version : findProperty("fabric_loader_version"),
+                minecraft_version : findProperty("minecraft_version"),
+                java_version : findProperty("java_version"),
+                neoforge_loader_version : findProperty("neoforge_loader_version"),
+                neoforge_version : findProperty("neoforge_version")
+            ])
+            exclude '**/*.png'
+            filteringCharset = 'UTF-8'
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         }
     }
+
+    // Configure Maven publishing.
+    /*publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = base.archivesName.get()
+                from components.java
+            }
+        }
+
+        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+        repositories {
+            // Add repositories to publish to here.
+            // Notice: This block does NOT have the same function as the block in the top level.
+            // The repositories here will be used for publishing your artifact, not for
+            // retrieving dependencies.
+        }
+    }*/
 }

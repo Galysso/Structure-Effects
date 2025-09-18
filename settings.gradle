@@ -1,19 +1,19 @@
 pluginManagement {
     repositories {
         maven { url = "https://maven.fabricmc.net/" }
-        maven { url = "https://maven.quiltmc.org/repository/release" }
+        maven { url = "https://maven.architectury.dev/" }
         maven { url = "https://maven.neoforged.net/releases" }
+        maven { url = "https://maven.quiltmc.org/repository/release" }
         gradlePluginPortal()
-        mavenCentral()
     }
     plugins {
-        id 'fabric-loom' version '1.9.1'
+        id 'dev.architectury.loom' version providers.gradleProperty('arch_loom_version').get()
+        id 'architectury-plugin' version providers.gradleProperty('architectury_version').get()
+        id 'net.neoforged.moddev' version providers.gradleProperty('neoforge_moddev_version').get()
+        id 'com.gradleup.shadow' version providers.gradleProperty('shadow_version').get()
     }
 }
 
-include(
-    ":modules:common",
-    ":modules:fabric"/*,
-    ":modules:quilt",
-    ":modules:neoforge"*/
-)
+include 'common'
+include 'fabric'
+include 'neoforge'

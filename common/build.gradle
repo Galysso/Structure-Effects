@@ -1,0 +1,7 @@
+architectury {
+    common project.findProperty("enabled_platforms").toString().split(',')
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:$project.fabric_loader_version"
+}

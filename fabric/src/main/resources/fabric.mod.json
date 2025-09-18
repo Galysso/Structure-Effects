@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "${mod_id}",
+	"version": "${mod_version}",
+	"name": "${display_name}",
+	"description": "${mod_description}",
+	"authors": [
+		"${author}"
+	],
+	"contact": {
+		"homepage": "${homepage}",
+		"sources": "${sources}"
+	},
+	"license": "${license}",
+	"icon": "${icon_location}",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "com.github.galysso.structures_features.StructuresFeaturesMain"
+		]
+	},
+	"mixins": [
+      "structures_features.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${fabric_loader_version}",
+		"minecraft": "~${minecraft_version}",
+		"java": ">=${java_version}",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
