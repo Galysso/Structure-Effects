@@ -24,22 +24,22 @@ public class ServerNamesSetsConfig extends Config {
 
     // Ton champ tel quel (Fzzy)
     public ValidatedStringMap<ValidatedPair.Tuple<Set<? extends String>, Set<? extends String>>> structuresNames =
-        new ValidatedStringMap<>(
-            Map.of(
-                "african_villages", new ValidatedPair.Tuple<>(DefaultConfig.AFRICAN_STRUCTURES, DefaultConfig.AFRICAN_NAMES),
-                "arabic_villages",  new ValidatedPair.Tuple<>(DefaultConfig.ARABIC_STRUCTURES,  DefaultConfig.ARABIC_NAMES),
-                "french_villages",  new ValidatedPair.Tuple<>(DefaultConfig.FRENCH_STRUCTURES,  DefaultConfig.FRENCH_NAMES),
-                "inuit_villages",   new ValidatedPair.Tuple<>(DefaultConfig.INUIT_STRUCTURES,   DefaultConfig.INUIT_NAMES),
-                "viking_villages",  new ValidatedPair.Tuple<>(DefaultConfig.VIKING_STRUCTURES,  DefaultConfig.VIKING_NAMES)
-            ),
-            new ValidatedString("new_names_list", "^[a-z_]{1,32}$"),
-            new ValidatedSet<>(
-                Set.of(),
-                new ValidatedString("minecraft:village_plains", "^[a-z0-9_.-]+:[a-z0-9/_.-]+$")
-            ).pairWith(
-                new ValidatedSet<>(Set.of(), new ValidatedString("Paris", "^.{1,15}$"))
-            )
-        );
+            new ValidatedStringMap<>(
+                    Map.of(
+                            "african_villages", new ValidatedPair.Tuple<>(DefaultNames.AFRICAN_STRUCTURES, DefaultNames.AFRICAN_NAMES),
+                            "arabic_villages",  new ValidatedPair.Tuple<>(DefaultNames.ARABIC_STRUCTURES,  DefaultNames.ARABIC_NAMES),
+                            "french_villages",  new ValidatedPair.Tuple<>(DefaultNames.FRENCH_STRUCTURES,  DefaultNames.FRENCH_NAMES),
+                            "inuit_villages",   new ValidatedPair.Tuple<>(DefaultNames.INUIT_STRUCTURES,   DefaultNames.INUIT_NAMES),
+                            "viking_villages",  new ValidatedPair.Tuple<>(DefaultNames.VIKING_STRUCTURES,  DefaultNames.VIKING_NAMES)
+                    ),
+                    new ValidatedString("new_names_list", "^[a-z_]{1,32}$"),
+                    new ValidatedSet<>(
+                            Set.of(),
+                            new ValidatedString("minecraft:village_plains", "^[a-z0-9_.-]+:[a-z0-9/_.-]+$")
+                    ).pairWith(
+                            new ValidatedSet<>(Set.of(), new ValidatedString("Paris", "^.{1,15}$"))
+                    )
+            );
 
     /** Convertit la config Fzzy (runtime Fabric) vers le modèle commun */
     public ServerConfigData toData() {
@@ -58,10 +58,10 @@ public class ServerNamesSetsConfig extends Config {
         Map<String, ValidatedPair.Tuple<Set<? extends String>, Set<? extends String>>> map = new LinkedHashMap<>();
         for (var e : data.structuresNames().entrySet()) {
             map.put(e.getKey(),
-                new ValidatedPair.Tuple<>(
-                    new LinkedHashSet<>(e.getValue().structures),
-                    new LinkedHashSet<>(e.getValue().names)
-                )
+                    new ValidatedPair.Tuple<>(
+                            new LinkedHashSet<>(e.getValue().structures),
+                            new LinkedHashSet<>(e.getValue().names)
+                    )
             );
         }
         this.structuresNames.validateAndSet(map);

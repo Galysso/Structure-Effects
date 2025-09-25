@@ -1,1 +1,2 @@
-com.github.galysso.structures_features.helper.NetworkHelperImpl
+com.github.galysso.structures_features.platform.fabric.helperImpl.NetworkHelperImpl
+com.github.galysso.structures_features.platform.neoforge.helperImpl.NetworkHelperImpl

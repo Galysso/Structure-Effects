@@ -2,16 +2,16 @@ package com.github.galysso.structures_features.config;
 
 import java.util.Set;
 
-public class DefaultConfig {
+public class DefaultNames {
     /* FRENCH */
     public final static Set<String> FRENCH_STRUCTURES = Set.of(
         "minecraft:village_plains"
     );
     public final static Set<String> FRENCH_NAMES = Set.of(
-        "Breûchamp",
-        "Vezmervâl",
+        "Breuchamp",
+        "Valvezmer",
         "Razoneron",
-        "Varvâult",
+        "Varvault",
         "Mereau",
         "Gouquy",
         "Plaierg",

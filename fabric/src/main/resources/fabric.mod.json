@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-          "com.github.galysso.structures_features.StructuresFeaturesMain"
+          "com.github.galysso.structures_features.platform.fabric.StructuresFeaturesMain"
 		]
 	},
 	"mixins": [

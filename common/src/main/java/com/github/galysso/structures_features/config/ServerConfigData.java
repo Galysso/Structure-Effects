@@ -26,16 +26,11 @@ public final class ServerConfigData {
     /** Valeurs par défaut — reprends tes constantes DefaultConfig.* ici */
     public static ServerConfigData defaults() {
         Map<String, NamesEntry> map = new LinkedHashMap<>();
-        map.put("african_villages",
-                new NamesEntry(DefaultConfig.AFRICAN_STRUCTURES, DefaultConfig.AFRICAN_NAMES));
-        map.put("arabic_villages",
-                new NamesEntry(DefaultConfig.ARABIC_STRUCTURES, DefaultConfig.ARABIC_NAMES));
-        map.put("french_villages",
-                new NamesEntry(DefaultConfig.FRENCH_STRUCTURES, DefaultConfig.FRENCH_NAMES));
-        map.put("inuit_villages",
-                new NamesEntry(DefaultConfig.INUIT_STRUCTURES, DefaultConfig.INUIT_NAMES));
-        map.put("viking_villages",
-                new NamesEntry(DefaultConfig.VIKING_STRUCTURES, DefaultConfig.VIKING_NAMES));
+        map.put("african_villages", new NamesEntry(DefaultNames.AFRICAN_STRUCTURES, DefaultNames.AFRICAN_NAMES));
+        map.put("arabic_villages", new NamesEntry(DefaultNames.ARABIC_STRUCTURES, DefaultNames.ARABIC_NAMES));
+        map.put("french_villages", new NamesEntry(DefaultNames.FRENCH_STRUCTURES, DefaultNames.FRENCH_NAMES));
+        map.put("inuit_villages", new NamesEntry(DefaultNames.INUIT_STRUCTURES, DefaultNames.INUIT_NAMES));
+        map.put("viking_villages", new NamesEntry(DefaultNames.VIKING_STRUCTURES, DefaultNames.VIKING_NAMES));
         return new ServerConfigData(map);
     }
 }

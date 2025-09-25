@@ -29,15 +29,52 @@ repositories {
         display_name = 'NeoForged'
         url = 'https://maven.neoforged.net/releases'
     }
+    maven { url = "https://thedarkcolour.github.io/KotlinForForge/" }
 }
 
 dependencies {
+    /* NeoForge loader */
     neoForge "net.neoforged:neoforge:$project.neoforge_version"
 
+    /* Common remapping */
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
 
-    modImplementation "me.fzzyhmstrs:fzzy_config:${project.neoforge_fzzy_config_version}"
+    /* Project dependencies */
+    // Kotlin for Forge (without neoforge loader)
+    modRuntimeOnly("thedarkcolour:kfflang-neoforge:${project.neoforge_kotlin_version}") {
+        exclude group: "net.neoforged.fancymodloader", module: "loader"
+    }
+    modRuntimeOnly("thedarkcolour:kotlinforforge-neoforge:${project.neoforge_kotlin_version}") {
+        exclude group: "net.neoforged.fancymodloader", module: "loader"
+    }
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.20")
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
+    /*configurations.all {
+        resolutionStrategy.eachDependency { d ->
+            if (d.requested.group == "thedarkcolour" &&
+                    (d.requested.name == "kfflang-neoforge" || d.requested.name == "kotlinforforge-neoforge")) {
+                d.useVersion("5.10.0")
+            }
+        }
+    }*/
+
+    forgeRuntimeLibrary "blue.endless:jankson:1.2.3"
+
+    // Fzzy Config (without kotlin for forge because it somehow duplicates neoforge loader dependency)
+    modRuntimeOnly("me.fzzyhmstrs:fzzy_config:${project.neoforge_fzzy_config_version}") {
+        exclude group: "thedarkcolour", module: "kotlinforforge-neoforge"
+        exclude group: "thedarkcolour", module: "kfflang-neoforge"
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand version: inputs.properties.version
+    }
 }
 
 shadowJar {

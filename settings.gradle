@@ -9,7 +9,6 @@ pluginManagement {
     plugins {
         id 'dev.architectury.loom' version providers.gradleProperty('arch_loom_version').get()
         id 'architectury-plugin' version providers.gradleProperty('architectury_version').get()
-        id 'net.neoforged.moddev' version providers.gradleProperty('neoforge_moddev_version').get()
         id 'com.gradleup.shadow' version providers.gradleProperty('shadow_version').get()
     }
 }

@@ -1,5 +1,6 @@
-package com.github.galysso.structures_features.helper;
+package com.github.galysso.structures_features.platform.fabric.helperImpl;
 
+import com.github.galysso.structures_features.helper.NetworkHelper;
 import com.github.galysso.structures_features.network.StructureFarewellPayload;
 import com.github.galysso.structures_features.network.StructureWelcomePayload;
 import com.github.galysso.structures_features.util.NetworkUtil;
@@ -9,7 +10,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class NetworkHelperImpl implements NetworkHelper {
-
     /* ---- PACKETS DECLARATIONS ----- */
     public static void init() {
         PayloadTypeRegistry.playS2C().register(StructureWelcomePayload.ID, StructureWelcomePayload.CODEC);

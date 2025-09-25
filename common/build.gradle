@@ -2,6 +2,15 @@ architectury {
     common project.findProperty("enabled_platforms").toString().split(',')
 }
 
+repositories {
+    maven { url = "https://repo.spongepowered.org/repository/maven-public/" } // <- Sponge
+}
+
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:$project.fabric_loader_version"
+    //modImplementation "net.fabricmc:fabric-loader:$project.fabric_loader_version"
+
+    modCompileOnly "me.fzzyhmstrs:fzzy_config:${project.fabric_fzzy_config_version}"
+
+    compileOnly "org.spongepowered:mixin:${project.mixin_version}"
+    annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
 }
