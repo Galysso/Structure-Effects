@@ -1,7 +1,7 @@
 package com.github.galysso.structures_features.platform.neoforge;
 
 import com.github.galysso.structures_features.StructuresFeatures;
-import com.github.galysso.structures_features.api.StructureRegistry;
+import com.github.galysso.structures_features.api.StructuresStorage;
 import com.github.galysso.structures_features.config.ServerNamesSetsConfig;
 import com.github.galysso.structures_features.util.ServerAccessor;
 import com.github.galysso.structures_features.util.StructureNaming;
@@ -33,14 +33,14 @@ public final class StructuresFeaturesMain {
             StructureNaming.get(server.overworld());
             StructureNaming.init();
             for (ServerLevel level : server.getAllLevels()) {
-                StructureRegistry.get(level);
+                StructuresStorage.get(level);
             }
         }
     }
 
     private void onLevelLoad(final LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
-            StructureRegistry.get(serverLevel);
+            StructuresStorage.get(serverLevel);
         }
     }
 }

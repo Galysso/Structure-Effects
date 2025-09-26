@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     /* NeoForge loader */
-    neoForge "net.neoforged:neoforge:$project.neoforge_version"
+    neoForge "net.neoforged:neoforge:$rootProject.ext.VERS.neoforge_version"
 
     /* Common remapping */
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
@@ -42,15 +42,15 @@ dependencies {
 
     /* Project dependencies */
     // Kotlin for Forge (without neoforge loader)
-    modRuntimeOnly("thedarkcolour:kfflang-neoforge:${project.neoforge_kotlin_version}") {
+    modRuntimeOnly("thedarkcolour:kfflang-neoforge:${rootProject.ext.VERS.neoforge_kotlin_version}") {
         exclude group: "net.neoforged.fancymodloader", module: "loader"
     }
-    modRuntimeOnly("thedarkcolour:kotlinforforge-neoforge:${project.neoforge_kotlin_version}") {
+    modRuntimeOnly("thedarkcolour:kotlinforforge-neoforge:${rootProject.ext.VERS.neoforge_kotlin_version}") {
         exclude group: "net.neoforged.fancymodloader", module: "loader"
     }
-    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
-    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.20")
-    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.VERS.neoforge_kotlin_libs}")
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.ext.VERS.neoforge_kotlin_libs}")
+    forgeRuntimeLibrary("org.jetbrains.kotlin:kotlin-reflect:${rootProject.ext.VERS.neoforge_kotlin_libs}")
     /*configurations.all {
         resolutionStrategy.eachDependency { d ->
             if (d.requested.group == "thedarkcolour" &&
@@ -63,7 +63,7 @@ dependencies {
     forgeRuntimeLibrary "blue.endless:jankson:1.2.3"
 
     // Fzzy Config (without kotlin for forge because it somehow duplicates neoforge loader dependency)
-    modRuntimeOnly("me.fzzyhmstrs:fzzy_config:${project.neoforge_fzzy_config_version}") {
+    modRuntimeOnly("me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.neoforge_fzzy_config_version}") {
         exclude group: "thedarkcolour", module: "kotlinforforge-neoforge"
         exclude group: "thedarkcolour", module: "kfflang-neoforge"
     }

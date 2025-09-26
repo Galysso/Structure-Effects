@@ -1,8 +1,8 @@
 package com.github.galysso.structures_features.api;
 
+import com.github.galysso.structures_features.compat.CompatAPI;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -20,7 +20,7 @@ import java.util.*;
 
 import static com.github.galysso.structures_features.StructuresFeatures.MOD_ID;
 
-public class StructureRegistry extends SavedData {
+public class StructuresStorage extends SavedData {
     private record InstanceKey(long startChunk, String structureId) { }
 
     private long counter;
@@ -54,10 +54,8 @@ public class StructureRegistry extends SavedData {
         long structureChunkPos = structureAccessor.getStructureAt(pos, structure).getChunkPos().toLong();
 
         Map<InstanceKey, StructureObject> structuresAtDimension = get(world).structuresMap;
-        //String structureId = world.getRegistryManager().get(Registries.STRUCTURE).getId(structure).toString();
-        //TODO: CA cloche ici
 
-        Registry<Structure> structures = world.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> structures = CompatAPI.getStructureRegistry(world);
         ResourceLocation structureIdentifier = structures.getKey(structure);
         if (structureIdentifier == null) {
             System.err.println("[" + MOD_ID + "] Could not find structure: " + structure);
@@ -81,21 +79,23 @@ public class StructureRegistry extends SavedData {
                 ),
                 structureObject
             );
-            StructureRegistry.get(world).setDirty();
+            StructuresStorage.get(world).setDirty();
         }
 
         return structureObject;
     }
 
+    public long getCounter() {
+        return counter;
+    }
 
     /* ----- persistent state ----- */
     public static final String ID = "structures_features_structure_registry";
-    public StructureRegistry() {
+    public StructuresStorage() {
         counter = 0;
         structuresMap = new HashMap<>();
     }
 
-    @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registryLookup) {
         nbt.put("counter", LongTag.valueOf(counter));
 
@@ -118,33 +118,37 @@ public class StructureRegistry extends SavedData {
         return nbt;
     }
 
-    public static StructureRegistry fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
-        StructureRegistry structureRegistry = new StructureRegistry();
-        if (nbt.contains("counter")) {
-            structureRegistry.counter = nbt.getLong("counter");
-        }
-        ListTag entries = nbt.getList("structures", CompoundTag.TAG_COMPOUND);
-        for (int i = 0; i < entries.size(); i++) {
-            CompoundTag compound = entries.getCompound(i);
+    public static StructuresStorage fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
+        StructuresStorage structuresStorage = new StructuresStorage();
+        Optional<Long> counterOpt = CompatAPI.getLongFromNbt(nbt, "counter");
+        counterOpt.ifPresent(aLong -> structuresStorage.counter = aLong);
+
+        Optional<ListTag> entries = CompatAPI.getListFromNbt(nbt, "structures", CompoundTag.TAG_COMPOUND);
+        if (entries.isEmpty()) return structuresStorage;
+
+        for (int i = 0; i < entries.get().size(); i++) {
+            Optional<CompoundTag> compound = CompatAPI.getCompoundFromNbtList(entries.get(), i);
+            if (compound.isEmpty()) continue;
+
+            Optional<Long> startChunkOpt = CompatAPI.getLongFromNbt(compound.get(), "start_chunk");
+            Optional<String> structureIdOpt = CompatAPI.getStringFromNbt(compound.get(), "structure_id");
+            if (startChunkOpt.isEmpty() || structureIdOpt.isEmpty()) continue;
+
             InstanceKey k = new InstanceKey(
-                    compound.getLong("start_chunk"),
-                    compound.getString("structure_id")
+                startChunkOpt.get(),
+                structureIdOpt.get()
             );
-            StructureObject structureObject = StructureObject.fromNbt(compound.getCompound("data"));
-            structureRegistry.structuresMap.put(k, structureObject);
+
+            Optional<CompoundTag> dataOpt = CompatAPI.getCompoundFromNbt(compound.get(), "data");
+            if (dataOpt.isEmpty()) continue;
+
+            StructureObject structureObject = StructureObject.fromNbt(dataOpt.get());
+            structuresStorage.structuresMap.put(k, structureObject);
         }
-        return structureRegistry;
+        return structuresStorage;
     }
 
-    public static final SavedData.Factory<StructureRegistry> TYPE =
-        new SavedData.Factory<>(
-            StructureRegistry::new,
-            StructureRegistry::fromNbt,
-            net.minecraft.util.datafix.DataFixTypes.LEVEL // Mojmap path du DataFixTypes
-        );
-
-    public static StructureRegistry get(ServerLevel level) {
-        var storage = level.getDataStorage();
-        return storage.computeIfAbsent(TYPE, ID);
+    public static StructuresStorage get(ServerLevel level) {
+        return CompatAPI.getStructuresStorage(level.getDataStorage());
     }
 }

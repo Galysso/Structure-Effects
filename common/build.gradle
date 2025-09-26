@@ -9,8 +9,36 @@ repositories {
 dependencies {
     //modImplementation "net.fabricmc:fabric-loader:$project.fabric_loader_version"
 
-    modCompileOnly "me.fzzyhmstrs:fzzy_config:${project.fabric_fzzy_config_version}"
+    modCompileOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
 
     compileOnly "org.spongepowered:mixin:${project.mixin_version}"
     annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
+}
+
+
+
+// Function that converts a minecraft version string into a comparable integer
+def vnum = { String v ->
+    def p = v.tokenize('.').collect { it as int }
+    (p[0]*1_000_000) + ((p.size()>1?p[1]:0)*1_000) + (p.size()>2?p[2]:0)
+}
+def target = vnum(project.minecraft_version)
+
+// Search for the best matching 'mc-<version>' directory in 'src'
+def candidates = file('src').listFiles()?.findAll { it.isDirectory() && it.name.startsWith('mc-') } ?: []
+def best = candidates
+        .collect { [dir: it, num: vnum(it.name - 'mc-')] }
+        .findAll { it.num <= target }
+        .max { it.num as long }   // null si aucun ≤ target
+
+// Adds the found directory to the source sets, if any
+sourceSets {
+    main {
+        java {
+            srcDir "src/main/java"
+            if (best && new File(best.dir, "java").exists()) {
+                srcDir "${best.dir}/java"
+            }
+        }
+    }
 }

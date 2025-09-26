@@ -5,7 +5,7 @@ plugins {
 }
 
 architectury {
-    minecraft = project.minecraft_version
+    minecraft = gradle.properties
 }
 
 allprojects {
@@ -51,6 +51,12 @@ subprojects {
         it.options.release = 21
     }
 
+    tasks.withType(JavaExec).configureEach {
+        javaLauncher.set(
+            javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
+        )
+    }
+
     pluginManager.withPlugin("java") {
         tasks.named('processResources') {
             from(project.file('common/src/main/resources'))
@@ -67,7 +73,7 @@ subprojects {
                 fabric_loader_version : findProperty("fabric_loader_version"),
                 minecraft_version : findProperty("minecraft_version"),
                 java_version : findProperty("java_version"),
-                neoforge_loader_version : findProperty("neoforge_loader_version"),
+                loader_version : findProperty("loader_version"),
                 neoforge_version : findProperty("neoforge_version")
             ])
             exclude '**/*.png'

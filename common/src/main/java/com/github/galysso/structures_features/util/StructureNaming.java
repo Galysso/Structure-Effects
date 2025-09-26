@@ -1,5 +1,6 @@
 package com.github.galysso.structures_features.util;
 
+import com.github.galysso.structures_features.compat.CompatAPI;
 import com.github.galysso.structures_features.config.ModConfigs;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -74,7 +75,6 @@ public class StructureNaming extends SavedData {
 
     public StructureNaming() { }
 
-    @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registryLookup) {
         CompoundTag outer = new CompoundTag();
         for (var namesList : consumedNames.entrySet()) {
@@ -90,26 +90,26 @@ public class StructureNaming extends SavedData {
 
     public static StructureNaming fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         StructureNaming s = new StructureNaming();
-        CompoundTag outer = nbt.getCompound("consumed_names");
-        for (String listKey : outer.getAllKeys()) {
+        Optional<CompoundTag> outerOpt = CompatAPI.getCompoundFromNbt(nbt, "consumed_names");
+        if (outerOpt.isEmpty()) return s;
+
+        for (String listKey : CompatAPI.getKeysSetFromNbt(outerOpt.get())) {
             Map<String, Boolean> namesMap = consumedNames.computeIfAbsent(listKey, k -> new HashMap<>());
-            ListTag arr = outer.getList(listKey, Tag.TAG_STRING);
-            for (int i = 0; i < arr.size(); i++) {
-                namesMap.put(arr.getString(i), true);
+            Optional<ListTag> arr = CompatAPI.getListFromNbt(outerOpt.get(), listKey, Tag.TAG_STRING);
+            if (arr.isEmpty()) continue;
+
+            for (int i = 0; i < arr.get().size(); i++) {
+                Optional<String> nameOpt = CompatAPI.getStringFromNbtList(arr.get(), i);
+                if (nameOpt.isEmpty()) continue;
+
+                namesMap.put(nameOpt.get(), true);
             }
         }
         return s;
     }
 
-    public static final SavedData.Factory<StructureNaming> FACTORY =
-        new SavedData.Factory<>(
-            StructureNaming::new,
-            StructureNaming::fromNbt,
-            DataFixTypes.LEVEL
-        );
-
 
     public static StructureNaming get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(FACTORY, ID);
+        return CompatAPI.getStructureNaming(level.getDataStorage());
     }
 }

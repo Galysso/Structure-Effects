@@ -1,9 +1,12 @@
 package com.github.galysso.structures_features.api;
 
+import com.github.galysso.structures_features.compat.CompatAPI;
 import com.github.galysso.structures_features.util.StructureNaming;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.Optional;
 
 public final class StructureObject {
     private long id;
@@ -72,21 +75,23 @@ public final class StructureObject {
     }
 
     static StructureObject fromNbt(CompoundTag nbt) {
-        long id = nbt.getLong("id");
+        Optional<Long> idOpt = CompatAPI.getLongFromNbt(nbt, "id");
+        if (idOpt.isEmpty()) {
+            throw new IllegalArgumentException("Missing id in NBT");
+        }
 
-        String sidStr = nbt.getString("structure_id");
-        ResourceLocation sid = ResourceLocation.tryParse(sidStr);
+        Optional<String> sidStrOpt = CompatAPI.getStringFromNbt(nbt, "structure_id");
+        if (sidStrOpt.isEmpty()) {
+            throw new IllegalArgumentException("Missing structure_id in NBT");
+        }
+
+        ResourceLocation sid = ResourceLocation.tryParse(sidStrOpt.get());
         if (sid == null) {
-            throw new IllegalArgumentException("Invalid structure identifier in NBT: '" + sidStr + "'");
+            throw new IllegalArgumentException("Invalid structure identifier in NBT: '" + sidStrOpt.get() + "'");
         }
 
-        String name = nbt.contains("display_name") ? nbt.getString("display_name") : "";
+        Optional<String> nameOpt = CompatAPI.getStringFromNbt(nbt, "display_name");// nbt.contains("display_name") ? nbt.getString("display_name") : "";
 
-        if (name .isEmpty()) {
-            name = StructureNaming.getRandomNameForStructure(sid.toString());
-        }
-
-        StructureObject obj = new StructureObject(id, sid, name);
-        return obj;
+        return new StructureObject(idOpt.get(), sid, nameOpt.orElseGet(() -> StructureNaming.getRandomNameForStructure(sid.toString())));
     }
 }

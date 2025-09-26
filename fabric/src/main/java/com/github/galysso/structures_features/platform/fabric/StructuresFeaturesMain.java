@@ -1,9 +1,9 @@
 package com.github.galysso.structures_features.platform.fabric;
 
 import com.github.galysso.structures_features.StructuresFeatures;
-import com.github.galysso.structures_features.api.StructureRegistry;
+import com.github.galysso.structures_features.api.StructuresStorage;
 import com.github.galysso.structures_features.config.ServerNamesSetsConfig;
-import com.github.galysso.structures_features.platform.fabric.helperImpl.NetworkHelperImpl;
+import com.github.galysso.structures_features.platform.fabric.helper.NetworkHelperImpl;
 import com.github.galysso.structures_features.util.ServerAccessor;
 import com.github.galysso.structures_features.util.StructureNaming;
 import net.fabricmc.api.ModInitializer;
@@ -24,12 +24,12 @@ public class StructuresFeaturesMain implements ModInitializer {
                 StructureNaming.get(server.overworld());
                 StructureNaming.init();
                 for (ServerLevel serverWorld : server.getAllLevels()) {
-                    StructureRegistry.get(serverWorld);
+                    StructuresStorage.get(serverWorld);
                 }
             }
         });
         ServerWorldEvents.LOAD.register((server, world) -> {
-            StructureRegistry.get(world);
+            StructuresStorage.get(world);
         });
 
         NetworkHelperImpl.init();

@@ -1,3 +1,4 @@
+// Declare plugins used in the build script
 pluginManagement {
     repositories {
         maven { url = "https://maven.fabricmc.net/" }
@@ -13,6 +14,20 @@ pluginManagement {
     }
 }
 
+// Load properties from correct version file
+def mcVersion = providers.gradleProperty("minecraft_version").get()
+def versionFile = file("gradle/versions-${mcVersion}.properties")
+if (!versionFile.exists()) {
+    throw new GradleException("Properties file ${versionFile} does not exist. Build the jar file using -Pmc=<version>, or set a value to minecraft_version in gradle.properties, or create the corresponding file in gradle folder.")
+}
+def versionProperties = new Properties()
+versionFile.withInputStream {versionProperties.load(it)}
+
+gradle.beforeProject { p ->
+    p.ext.set("VERS", versionProperties)
+}
+
+// Declare modules
 include 'common'
 include 'fabric'
 include 'neoforge'

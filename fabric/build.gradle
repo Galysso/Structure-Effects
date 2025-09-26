@@ -27,14 +27,14 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
 
     /* Fabric API */
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.ext.VERS.fabric_version}"
 
     /* Common remapping */
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 
     /* Project dependencies */
-    modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${project.fabric_fzzy_config_version}"
+    modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
 }
 
 processResources {

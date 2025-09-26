@@ -1,4 +1,4 @@
-package com.github.galysso.structures_features.platform.fabric.helperImpl;
+package com.github.galysso.structures_features.platform.fabric.helper;
 
 import com.github.galysso.structures_features.helper.NetworkHelper;
 import com.github.galysso.structures_features.network.StructureFarewellPayload;
