@@ -21,7 +21,7 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.Optional;
 import java.util.Set;
 
-public class CompatAPI implements CompatInterface {
+public class CompatAPI {
     private static final Codec<StructuresStorage> STRUCTURES_STORAGE_CODEC =
             CompoundTag.CODEC.xmap(
                 tag  -> StructuresStorage.fromNbt(tag, RegistryAccess.EMPTY),

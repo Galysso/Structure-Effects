@@ -15,7 +15,7 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.Optional;
 import java.util.Set;
 
-public class CompatAPI implements CompatInterface {
+public class CompatAPI {
     public static final SavedData.Factory<StructuresStorage> STRUCTURES_STORAGE_TYPE = new SavedData.Factory<>(
         StructuresStorage::new,
         StructuresStorage::fromNbt,
