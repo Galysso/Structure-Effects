@@ -31,9 +31,9 @@ public class CompatAPI {
     public static final SavedDataType<StructuresStorage> STRUCTURES_STORAGE_TYPE =
         new SavedDataType<>(
             StructuresStorage.ID,
-            StructuresStorage::new,  // supplier quand aucun fichier n’existe
-            STRUCTURES_STORAGE_CODEC,                   // codec sans contexte
-            DataFixTypes.LEVEL       // requis dans 1.21.5
+            StructuresStorage::new,
+            STRUCTURES_STORAGE_CODEC,
+            DataFixTypes.LEVEL
         );
 
     public static StructuresStorage getStructuresStorage(DimensionDataStorage storage) {
