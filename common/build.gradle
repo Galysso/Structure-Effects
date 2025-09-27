@@ -16,6 +16,8 @@ dependencies {
 }
 
 
+// TODO: Consider source categories in order to prevent useless and numerous code duplication
+// TODO: Split shims into separate files to separate the logics in a more elegant way
 
 // Function that converts a minecraft version string into a comparable integer
 def vnum = { String v ->
@@ -25,19 +27,36 @@ def vnum = { String v ->
 def target = vnum(project.minecraft_version)
 
 // Search for the best matching 'mc-<version>' directory in 'src'
-def candidates = file('src').listFiles()?.findAll { it.isDirectory() && it.name.startsWith('mc-') } ?: []
+/*def candidates = file('src').listFiles()?.findAll { it.isDirectory() && it.name.startsWith('mc-') } ?: []
 def best = candidates
         .collect { [dir: it, num: vnum(it.name - 'mc-')] }
         .findAll { it.num <= target }
         .max { it.num as long }   // null si aucun ≤ target
+*/
+
+def pickBest = { base ->
+    def root = file(base)
+    if (!root.exists()) return null
+    def cands = root.listFiles()?.findAll{ it.isDirectory() && it.name.startsWith('mc-') } ?: []
+    cands.collect{ [dir: it, num: vnum(it.name - 'mc-')] }
+            .findAll{ it.num <= target }
+            .max{ it.num as long }?.dir
+}
+
+def cats = ["nbt", "registry", "saved_data", "server_player"]
 
 // Adds the found directory to the source sets, if any
 sourceSets {
     main {
         java {
             srcDir "src/main/java"
-            if (best && new File(best.dir, "java").exists()) {
-                srcDir "${best.dir}/java"
+            println "Searching compatilibity sources for MC ${project.minecraft_version}..."
+            cats.each { cat ->
+                def best = pickBest("src/compat/${cat}")
+                if (best && new File(best, "java").exists()) {
+                    println ">> Compat ${cat}: using ${best}/java"
+                    srcDir "${best}/java"
+                }
             }
         }
     }

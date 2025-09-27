@@ -1,6 +1,7 @@
 package com.github.galysso.structures_features.util;
 
-import com.github.galysso.structures_features.compat.CompatAPI;
+import com.github.galysso.structures_features.compat.Compat_NBT;
+import com.github.galysso.structures_features.compat.Compat_SavedData;
 import com.github.galysso.structures_features.config.ModConfigs;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -90,16 +91,16 @@ public class StructureNaming extends SavedData {
 
     public static StructureNaming fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         StructureNaming s = new StructureNaming();
-        Optional<CompoundTag> outerOpt = CompatAPI.getCompoundFromNbt(nbt, "consumed_names");
+        Optional<CompoundTag> outerOpt = Compat_NBT.getCompound(nbt, "consumed_names");
         if (outerOpt.isEmpty()) return s;
 
-        for (String listKey : CompatAPI.getKeysSetFromNbt(outerOpt.get())) {
+        for (String listKey : Compat_NBT.getKeysSet(outerOpt.get())) {
             Map<String, Boolean> namesMap = consumedNames.computeIfAbsent(listKey, k -> new HashMap<>());
-            Optional<ListTag> arr = CompatAPI.getListFromNbt(outerOpt.get(), listKey, Tag.TAG_STRING);
+            Optional<ListTag> arr = Compat_NBT.getList(outerOpt.get(), listKey, Tag.TAG_STRING);
             if (arr.isEmpty()) continue;
 
             for (int i = 0; i < arr.get().size(); i++) {
-                Optional<String> nameOpt = CompatAPI.getStringFromNbtList(arr.get(), i);
+                Optional<String> nameOpt = Compat_NBT.getStringFromList(arr.get(), i);
                 if (nameOpt.isEmpty()) continue;
 
                 namesMap.put(nameOpt.get(), true);
@@ -110,6 +111,6 @@ public class StructureNaming extends SavedData {
 
 
     public static StructureNaming get(ServerLevel level) {
-        return CompatAPI.getStructureNaming(level.getDataStorage());
+        return Compat_SavedData.getStructureNaming(level.getDataStorage());
     }
 }

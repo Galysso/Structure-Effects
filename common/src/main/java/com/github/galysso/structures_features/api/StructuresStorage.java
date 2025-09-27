@@ -1,6 +1,8 @@
 package com.github.galysso.structures_features.api;
 
-import com.github.galysso.structures_features.compat.CompatAPI;
+import com.github.galysso.structures_features.compat.Compat_NBT;
+import com.github.galysso.structures_features.compat.Compat_Registry;
+import com.github.galysso.structures_features.compat.Compat_SavedData;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.HolderLookup;
@@ -55,7 +57,7 @@ public class StructuresStorage extends SavedData {
 
         Map<InstanceKey, StructureObject> structuresAtDimension = get(world).structuresMap;
 
-        Registry<Structure> structures = CompatAPI.getStructureRegistry(world);
+        Registry<Structure> structures = Compat_Registry.getStructureRegistry(world);
         ResourceLocation structureIdentifier = structures.getKey(structure);
         if (structureIdentifier == null) {
             System.err.println("[" + MOD_ID + "] Could not find structure: " + structure);
@@ -120,18 +122,18 @@ public class StructuresStorage extends SavedData {
 
     public static StructuresStorage fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         StructuresStorage structuresStorage = new StructuresStorage();
-        Optional<Long> counterOpt = CompatAPI.getLongFromNbt(nbt, "counter");
+        Optional<Long> counterOpt = Compat_NBT.getLong(nbt, "counter");
         counterOpt.ifPresent(aLong -> structuresStorage.counter = aLong);
 
-        Optional<ListTag> entries = CompatAPI.getListFromNbt(nbt, "structures", CompoundTag.TAG_COMPOUND);
+        Optional<ListTag> entries = Compat_NBT.getList(nbt, "structures", CompoundTag.TAG_COMPOUND);
         if (entries.isEmpty()) return structuresStorage;
 
         for (int i = 0; i < entries.get().size(); i++) {
-            Optional<CompoundTag> compound = CompatAPI.getCompoundFromNbtList(entries.get(), i);
+            Optional<CompoundTag> compound = Compat_NBT.getCompoundFromList(entries.get(), i);
             if (compound.isEmpty()) continue;
 
-            Optional<Long> startChunkOpt = CompatAPI.getLongFromNbt(compound.get(), "start_chunk");
-            Optional<String> structureIdOpt = CompatAPI.getStringFromNbt(compound.get(), "structure_id");
+            Optional<Long> startChunkOpt = Compat_NBT.getLong(compound.get(), "start_chunk");
+            Optional<String> structureIdOpt = Compat_NBT.getString(compound.get(), "structure_id");
             if (startChunkOpt.isEmpty() || structureIdOpt.isEmpty()) continue;
 
             InstanceKey k = new InstanceKey(
@@ -139,7 +141,7 @@ public class StructuresStorage extends SavedData {
                 structureIdOpt.get()
             );
 
-            Optional<CompoundTag> dataOpt = CompatAPI.getCompoundFromNbt(compound.get(), "data");
+            Optional<CompoundTag> dataOpt = Compat_NBT.getCompound(compound.get(), "data");
             if (dataOpt.isEmpty()) continue;
 
             StructureObject structureObject = StructureObject.fromNbt(dataOpt.get());
@@ -149,6 +151,6 @@ public class StructuresStorage extends SavedData {
     }
 
     public static StructuresStorage get(ServerLevel level) {
-        return CompatAPI.getStructuresStorage(level.getDataStorage());
+        return Compat_SavedData.getStructuresStorage(level.getDataStorage());
     }
 }

@@ -2,7 +2,7 @@ package com.github.galysso.structures_features.mixin;
 
 import com.github.galysso.structures_features.api.StructureObject;
 import com.github.galysso.structures_features.api.StructuresStorage;
-import com.github.galysso.structures_features.compat.CompatAPI;
+import com.github.galysso.structures_features.compat.Compat_ServerPlayer;
 import com.github.galysso.structures_features.helper.PlatformLoader;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
@@ -56,13 +56,13 @@ public class ServerPlayerMixin {
     }
 
     public boolean hasMoved(ServerPlayer player) {
-        return world == null || blockPos == null || !world.equals(CompatAPI.getServerLevelFromServerPlayer(player)) || !blockPos.equals(player.getOnPos());
+        return world == null || blockPos == null || !world.equals(Compat_ServerPlayer.getServerLevel(player)) || !blockPos.equals(player.getOnPos());
     }
 
     public void updatePosition(ServerPlayer player) {
         BlockPos newBlockPos = player.getOnPos();
         ChunkPos newChunkPos = new ChunkPos(newBlockPos);
-        ServerLevel newWorld = CompatAPI.getServerLevelFromServerPlayer(player);
+        ServerLevel newWorld = Compat_ServerPlayer.getServerLevel(player);
 
         if (!newChunkPos.equals(chunkPos) || !newWorld.equals(world)) {
             structureReferences = newWorld.structureManager().getAllStructuresAt(newBlockPos);

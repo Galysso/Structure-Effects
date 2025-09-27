@@ -1,6 +1,6 @@
 package com.github.galysso.structures_features.api;
 
-import com.github.galysso.structures_features.compat.CompatAPI;
+import com.github.galysso.structures_features.compat.Compat_NBT;
 import com.github.galysso.structures_features.util.StructureNaming;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -75,12 +75,12 @@ public final class StructureObject {
     }
 
     static StructureObject fromNbt(CompoundTag nbt) {
-        Optional<Long> idOpt = CompatAPI.getLongFromNbt(nbt, "id");
+        Optional<Long> idOpt = Compat_NBT.getLong(nbt, "id");
         if (idOpt.isEmpty()) {
             throw new IllegalArgumentException("Missing id in NBT");
         }
 
-        Optional<String> sidStrOpt = CompatAPI.getStringFromNbt(nbt, "structure_id");
+        Optional<String> sidStrOpt = Compat_NBT.getString(nbt, "structure_id");
         if (sidStrOpt.isEmpty()) {
             throw new IllegalArgumentException("Missing structure_id in NBT");
         }
@@ -90,7 +90,7 @@ public final class StructureObject {
             throw new IllegalArgumentException("Invalid structure identifier in NBT: '" + sidStrOpt.get() + "'");
         }
 
-        Optional<String> nameOpt = CompatAPI.getStringFromNbt(nbt, "display_name");// nbt.contains("display_name") ? nbt.getString("display_name") : "";
+        Optional<String> nameOpt = Compat_NBT.getString(nbt, "display_name");// nbt.contains("display_name") ? nbt.getString("display_name") : "";
 
         return new StructureObject(idOpt.get(), sid, nameOpt.orElseGet(() -> StructureNaming.getRandomNameForStructure(sid.toString())));
     }
