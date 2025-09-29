@@ -6,6 +6,7 @@ import com.github.galysso.structures_features.compat.Compat_SavedData;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
@@ -57,7 +58,7 @@ public class StructuresStorage extends SavedData {
 
         Map<InstanceKey, StructureObject> structuresAtDimension = get(world).structuresMap;
 
-        Registry<Structure> structures = Compat_Registry.getStructureRegistry(world);
+        Registry<Structure> structures = Compat_Registry.getRegistry(world, Registries.STRUCTURE);
         ResourceLocation structureIdentifier = structures.getKey(structure);
         if (structureIdentifier == null) {
             System.err.println("[" + MOD_ID + "] Could not find structure: " + structure);

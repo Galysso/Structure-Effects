@@ -6,43 +6,44 @@ repositories {
     maven { url = "https://repo.spongepowered.org/repository/maven-public/" } // <- Sponge
 }
 
+// Enabling / disabling integration with other mods
+def wraith_waystones_integration = rootProject.ext.VERS.containsKey('wraith_waystones_version')
+
+// Dependencies
 dependencies {
-    //modImplementation "net.fabricmc:fabric-loader:$project.fabric_loader_version"
+    //compileOnly "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
 
     modCompileOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
 
     compileOnly "org.spongepowered:mixin:${project.mixin_version}"
     annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
+
+    if (wraith_waystones_integration) {
+        modCompileOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
+        //modRuntimeOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
+    }
 }
-
-
-// TODO: Consider source categories in order to prevent useless and numerous code duplication
-// TODO: Split shims into separate files to separate the logics in a more elegant way
 
 // Function that converts a minecraft version string into a comparable integer
 def vnum = { String v ->
     def p = v.tokenize('.').collect { it as int }
     (p[0]*1_000_000) + ((p.size()>1?p[1]:0)*1_000) + (p.size()>2?p[2]:0)
 }
+
+// Target minecraft version as a comparable integer
 def target = vnum(project.minecraft_version)
 
-// Search for the best matching 'mc-<version>' directory in 'src'
-/*def candidates = file('src').listFiles()?.findAll { it.isDirectory() && it.name.startsWith('mc-') } ?: []
-def best = candidates
-        .collect { [dir: it, num: vnum(it.name - 'mc-')] }
-        .findAll { it.num <= target }
-        .max { it.num as long }   // null si aucun ≤ target
-*/
-
+// Picks the best matching directory for the given base path and target version
 def pickBest = { base ->
     def root = file(base)
     if (!root.exists()) return null
     def cands = root.listFiles()?.findAll{ it.isDirectory() && it.name.startsWith('mc-') } ?: []
     cands.collect{ [dir: it, num: vnum(it.name - 'mc-')] }
-            .findAll{ it.num <= target }
-            .max{ it.num as long }?.dir
+        .findAll{ it.num <= target }
+        .max{ it.num as long }?.dir
 }
 
+// Categories of version-specific sources
 def cats = ["nbt", "registry", "saved_data", "server_player"]
 
 // Adds the found directory to the source sets, if any
@@ -51,12 +52,33 @@ sourceSets {
         java {
             srcDir "src/main/java"
             println "Searching compatilibity sources for MC ${project.minecraft_version}..."
+
+            // Minecraft version specific sources
             cats.each { cat ->
                 def best = pickBest("src/compat/${cat}")
                 if (best && new File(best, "java").exists()) {
                     println ">> Compat ${cat}: using ${best}/java"
                     srcDir "${best}/java"
                 }
+            }
+
+            // Mixins declaration
+            //resources.srcDir "src/integration/mixins_declaration/mc-${project.minecraft_version}/resources"
+
+            // Integration with other mods
+
+            // Default empty mixinv sources
+            srcDir "src/integration/default/java"
+
+            if (wraith_waystones_integration) {
+                def best = pickBest("src/integration/wraith_waystones")
+                if (best && new File(best, "java").exists()) {
+                    println ">> Integration wraith_waystones: using ${best}/java"
+                    srcDir "${best}/java"
+                    resources.srcDir "${best}/resources"
+                }
+            } else {
+                resources.srcDir "src/integration/default/resources/wraith_waystones"
             }
         }
     }

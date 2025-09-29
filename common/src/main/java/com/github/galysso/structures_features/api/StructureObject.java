@@ -12,7 +12,6 @@ public final class StructureObject {
     private long id;
     private ResourceLocation structureId;
     private String name;
-    private boolean nameIsMissing;
 
     /* ----- CONSTRUCTORS ----- */
     public static StructureObject create(long id, ResourceLocation structureId) {

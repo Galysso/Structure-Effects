@@ -18,8 +18,15 @@ subprojects {
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
 
-    base {
-        archivesName = "$project.archives_base_name-$project.display_name"
+    /*base {
+        archivesName = "$project.archives_base_name-$project.name"
+    }*/
+
+    tasks.named('jar') {
+        archiveBaseName = "$project.archives_base_name"
+        archiveAppendix = "mc${minecraft_version}"
+        archiveVersion = "$project.mod_version"
+        archiveClassifier = "$project.name"
     }
 
     repositories {
@@ -60,7 +67,7 @@ subprojects {
     pluginManager.withPlugin("java") {
         tasks.named('processResources') {
             from(project.file('common/src/main/resources'))
-            expand([
+            def P = [
                 author : findProperty("author"),
                 mod_version      : findProperty("mod_version"),
                 mod_id       : findProperty("mod_id"),
@@ -74,8 +81,13 @@ subprojects {
                 minecraft_version : findProperty("minecraft_version"),
                 java_version : findProperty("java_version"),
                 loader_version : findProperty("loader_version"),
-                neoforge_version : findProperty("neoforge_version")
-            ])
+                neoforge_version : rootProject.ext.VERS.neoforge_version
+            ]
+
+            inputs.properties(P)
+            filesMatching("fabric.mod.json") {expand(P)}
+            filesMatching("META-INF/neoforge.mods.toml") {expand(P)}
+
             exclude '**/*.png'
             filteringCharset = 'UTF-8'
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE

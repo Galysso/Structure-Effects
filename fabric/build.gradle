@@ -35,6 +35,12 @@ dependencies {
 
     /* Project dependencies */
     modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
+
+    //modCompileOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
+    // integrations
+    if (rootProject.ext.VERS.containsKey('wraith_waystones_version')) {
+        modRuntimeOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
+    }
 }
 
 processResources {

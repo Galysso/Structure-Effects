@@ -14,8 +14,6 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 @Mod(StructuresFeatures.MOD_ID)
 public final class StructuresFeaturesMain {
-    private static ServerNamesSetsConfig SERVER_NAMES_SETS_CONFIG;
-
     public StructuresFeaturesMain(IEventBus modEventBus) {
         StructuresFeatures.LOGGER.info("Initialization (NeoForge).");
 
@@ -25,17 +23,7 @@ public final class StructuresFeaturesMain {
     }
 
     private void onServerStarted(final ServerStartedEvent event) {
-        var server = event.getServer();
-        ServerAccessor.setServerInstance(server);
-
-        if (SERVER_NAMES_SETS_CONFIG == null) {
-            SERVER_NAMES_SETS_CONFIG = new ServerNamesSetsConfig();
-            StructureNaming.get(server.overworld());
-            StructureNaming.init();
-            for (ServerLevel level : server.getAllLevels()) {
-                StructuresStorage.get(level);
-            }
-        }
+        StructuresFeatures.serverInit(event.getServer());
     }
 
     private void onLevelLoad(final LevelEvent.Load event) {

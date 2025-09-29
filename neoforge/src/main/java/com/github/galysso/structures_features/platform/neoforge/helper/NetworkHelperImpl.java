@@ -9,15 +9,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-@EventBusSubscriber(modid = StructuresFeatures.MOD_ID)
+@EventBusSubscriber(
+    modid = StructuresFeatures.MOD_ID,
+    bus   = EventBusSubscriber.Bus.MOD
+)
 public final class NetworkHelperImpl implements NetworkHelper {
-
-    /* ---- PACKETS DECLARATIONS ----- */
-
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
         // Version de protocole propre à ton mod (même des deux côtés si tu as du serverbound)

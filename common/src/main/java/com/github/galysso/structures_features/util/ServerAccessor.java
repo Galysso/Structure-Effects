@@ -12,4 +12,8 @@ public class ServerAccessor {
     public static MinecraftServer getServer() {
         return serverInstance;
     }
+
+    public static int getCurrentTick() {
+        return serverInstance.getTickCount();
+    }
 }

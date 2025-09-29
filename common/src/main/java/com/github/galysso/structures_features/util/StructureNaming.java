@@ -1,15 +1,14 @@
 package com.github.galysso.structures_features.util;
 
+import com.github.galysso.structures_features.StructuresFeatures;
 import com.github.galysso.structures_features.compat.Compat_NBT;
 import com.github.galysso.structures_features.compat.Compat_SavedData;
-import com.github.galysso.structures_features.config.ModConfigs;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.*;
@@ -21,13 +20,13 @@ public class StructureNaming extends SavedData {
     private static Map<String, Map<String, Boolean>> consumedNames = new HashMap<>(); /* persistant */
 
     public static void init() {
-        for (var structuresSet : ModConfigs.server().structuresNames().entrySet()) {
-            for (String structureId : structuresSet.getValue().structures) {
+        for (var structuresSet : StructuresFeatures.SERVER_NAMES_SETS_CONFIG.structuresNames.entrySet()) {
+            for (String structureId : structuresSet.getValue().getLeft()) {
                 List<String> listOfNamesLists = listsTitlesByStructure.computeIfAbsent(structureId, k -> new ArrayList<>());
                 listOfNamesLists.add(String.valueOf(structuresSet.getKey()));
             }
             availableNames.put(structuresSet.getKey(), new ArrayList<>());
-            for (String name : structuresSet.getValue().names) {
+            for (String name : structuresSet.getValue().getRight()) {
                 if (!consumedNames.containsKey(structuresSet.getKey()) || !consumedNames.get(structuresSet.getKey()).containsKey(name)) {
                     availableNames.get(structuresSet.getKey()).add(name);
                 }
@@ -56,7 +55,7 @@ public class StructureNaming extends SavedData {
                 namesList.set(index, namesList.getLast());
                 namesList.removeLast();
                 if (namesList.isEmpty()) {
-                    namesList.addAll(ModConfigs.server().structuresNames().get(listTitle).names);
+                    namesList.addAll(StructuresFeatures.SERVER_NAMES_SETS_CONFIG.structuresNames.get(listTitle).getRight());
                     consumedNames.get(listTitle).clear();
                 }
                 consumedNames.computeIfAbsent(listTitle, k -> new HashMap<>()).put(selectedName, true);
