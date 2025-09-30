@@ -15,6 +15,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -22,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,74 +35,110 @@ import java.util.*;
 
 @Mixin(ServerPlayer.class)
 public class ServerPlayerMixin {
-    private ChunkPos chunkPos = null;
-    private ServerLevel world = null;
-    private BlockPos blockPos = null;
-    private Map<Structure, LongSet> structureReferences;
-    private Set<StructureObject> structures = new HashSet<StructureObject>();
-    private int ticksCounter = 0;
+    // Data for initialization
+    @Unique
+    private boolean structures_features$positionInitialized = false;
+    @Unique
+    private boolean structures_features$effectDeadlinesInitialized = false;
+    @Unique
+    private String structures_features$dimensionId = null;
 
-    private Map<String, Map<Long, Integer>> effectsDeadline = new java.util.HashMap<>();
+    // Data for tracking structures
+    @Unique
+    private ChunkPos structures_features$chunkPos = null;
+    @Unique
+    private ServerLevel structures_features$world = null;
+    @Unique
+    private BlockPos structures_features$blockPos = null;
+    @Unique
+    private Map<Structure, LongSet> structures_features$structureReferences;
+    @Unique
+    private Set<StructureObject> structures_features$structures = new HashSet<StructureObject>();
+
+    // Tick counter to limit structure checks
+    @Unique
+    private int structures_features$ticksCounter = 0;
+
+    // Data for effects management
+    @Unique
+    private Map<String, Map<Long, Long>> structures_features$effectsDeadline = new java.util.HashMap<>();
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
-        updateStructures();
+        if (!structures_features$effectDeadlinesInitialized) {
+            structures_features$initEffectDeadlines();
+        } else {
+            structures_features$updateStructures();
+        }
     }
 
     @Unique
-    private void updateStructures() {
+    private void structures_features$initEffectDeadlines() {
+        if (!ServerAccessor.ready()) return;
+
+        for (var structuresForEffect : structures_features$effectsDeadline.values()) {
+            for (var entry : structuresForEffect.entrySet()) {
+                entry.setValue(entry.getValue() + ServerAccessor.getGameTime());
+                System.out.println("updating deadline for " + entry.getKey() + " : " + entry.getValue() + " to " + (entry.getValue()) + "(game time is: " + ServerAccessor.getGameTime() +")");
+            }
+        }
+        structures_features$effectDeadlinesInitialized = true;
+    }
+
+    @Unique
+    private void structures_features$updateStructures() {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
-        ticksCounter++;
-        if (ticksCounter < 20) return; // every second
-        ticksCounter = 0;
+        structures_features$ticksCounter++;
+        if (structures_features$ticksCounter < 20) return; // every second
+        structures_features$ticksCounter = 0;
 
-        if (!hasMoved()) return; // Player did not move, skipping
+        if (!structures_features$hasMoved()) return; // Player did not move, skipping
 
-        updatePosition();
-        Set<StructureObject> newStructures = StructuresStorage.getOrCreateStructuresAtPos(world, structureReferences, blockPos);
+        structures_features$updatePosition();
+        Set<StructureObject> newStructures = StructuresStorage.getOrCreateStructuresAtPos(structures_features$world, structures_features$structureReferences, structures_features$blockPos);
 
         for (StructureObject structureObject : newStructures) {
-            if (!structures.contains(structureObject)) {
+            if (!structures_features$structures.contains(structureObject)) {
                 PlatformLoader.sendWelcome(serverPlayer, structureObject.getName());
-                addEffects(structureObject);
+                structures_features$addEffects(structureObject);
             }
         }
-        for (StructureObject structureObject : structures) {
+        for (StructureObject structureObject : structures_features$structures) {
             if (!newStructures.contains(structureObject)) {
                 PlatformLoader.sendFarewell(serverPlayer, structureObject.getName());
-                removeEffects(structureObject);
+                structures_features$removeEffects(structureObject);
             }
         }
 
-        structures = newStructures;
+        structures_features$structures = newStructures;
     }
 
     @Unique
-    private boolean hasMoved() {
+    private boolean structures_features$hasMoved() {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
-        return world == null || blockPos == null || !world.equals(Compat_ServerPlayer.getServerLevel(serverPlayer)) || !blockPos.equals(serverPlayer.getOnPos());
+        return structures_features$world == null || structures_features$blockPos == null || !structures_features$world.equals(Compat_ServerPlayer.getServerLevel(serverPlayer)) || !structures_features$blockPos.equals(serverPlayer.getOnPos());
     }
 
     @Unique
-    private void updatePosition() {
+    private void structures_features$updatePosition() {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
         BlockPos newBlockPos = serverPlayer.getOnPos();
         ChunkPos newChunkPos = new ChunkPos(newBlockPos);
         ServerLevel newWorld = Compat_ServerPlayer.getServerLevel(serverPlayer);
 
-        if (!newChunkPos.equals(chunkPos) || !newWorld.equals(world)) {
-            structureReferences = newWorld.structureManager().getAllStructuresAt(newBlockPos);
+        if (!newChunkPos.equals(structures_features$chunkPos) || !newWorld.equals(structures_features$world)) {
+            structures_features$structureReferences = newWorld.structureManager().getAllStructuresAt(newBlockPos);
         }
 
-        blockPos = newBlockPos;
-        chunkPos = newChunkPos;
-        world = newWorld;
+        structures_features$blockPos = newBlockPos;
+        structures_features$chunkPos = newChunkPos;
+        structures_features$world = newWorld;
     }
 
     @Unique
-    private void addEffects(StructureObject structureObject) {
+    private void structures_features$addEffects(StructureObject structureObject) {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
         List<EffectConfig> effects = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
@@ -111,33 +149,34 @@ public class ServerPlayerMixin {
             if (id == null) continue;
 
             RegistryAccess registryAccess = Compat_ServerPlayer.getServerLevel(serverPlayer).registryAccess();
-            Registry<MobEffect> reg = Compat_Registry.getRegistry(world, Registries.MOB_EFFECT);
+            Registry<MobEffect> reg = Compat_Registry.getRegistry(structures_features$world, Registries.MOB_EFFECT);
             ResourceKey<MobEffect> key = ResourceKey.create(Registries.MOB_EFFECT, id);
             Holder<MobEffect> holder = Compat_Registry.getHolder(reg, key).orElse(null);
             if (holder == null) continue;
 
-            Map<Long, Integer> structuresWithTheEffect = effectsDeadline.computeIfAbsent(effectConfig.effectId, k -> new HashMap<>());
+            Map<Long, Long> structuresWithTheEffect = structures_features$effectsDeadline.computeIfAbsent(effectConfig.effectId, k -> new HashMap<>());
 
             structuresWithTheEffect.put(
                 structureObject.getId(),
-                ServerAccessor.getCurrentTick() + effectConfig.duration * 20
+                ServerAccessor.getGameTime() + effectConfig.duration * 20L
             );
 
-            serverPlayer.addEffect(
-                new MobEffectInstance(
-                    holder,
-                    effectConfig.duration * 20,
-                    effectConfig.amplifier,
-                    effectConfig.ambient,
-                    effectConfig.visible,
-                    effectConfig.showIcon
-                )
+            MobEffectInstance newEffect = new MobEffectInstance(
+                holder,
+                effectConfig.duration * 20,
+                effectConfig.amplifier,
+                effectConfig.ambient,
+                effectConfig.visible,
+                effectConfig.showIcon
             );
+            ((MobEffectInstanceDuck) newEffect).setResponsibleStructure(structureObject.getId());
+            System.out.println("Setting responsible structure: " + ((MobEffectInstanceDuck) newEffect).getResponsibleStructure() + " for effect " + effectConfig.effectId + " from structure " + structureObject.getId());
+            serverPlayer.addEffect(newEffect);
         }
     }
 
     @Unique
-    private void removeEffects(StructureObject structureObject) {
+    private void structures_features$removeEffects(StructureObject structureObject) {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
 
@@ -147,10 +186,10 @@ public class ServerPlayerMixin {
         Registry<MobEffect> reg = Compat_Registry.getRegistry(Compat_ServerPlayer.getServerLevel(serverPlayer), Registries.MOB_EFFECT);
 
         for (var effectConfig : effects) {
-            Map<Long, Integer> structuresWithTheEffect = effectsDeadline.get(effectConfig.effectId);
+            Map<Long, Long> structuresWithTheEffect = structures_features$effectsDeadline.get(effectConfig.effectId);
             if (structuresWithTheEffect == null) continue;
 
-            Integer deadline = structuresWithTheEffect.remove(structureObject.getId());
+            Long deadline = structuresWithTheEffect.remove(structureObject.getId());
             if (deadline == null) continue;
 
             if (effectConfig.clearedWhenLeaving) {
@@ -164,7 +203,8 @@ public class ServerPlayerMixin {
                 MobEffectInstance instance = serverPlayer.getEffect(holder);
                 if (instance == null) continue;
 
-                MobEffectInstance rebuilt = removeUniqueEffect(instance, effectConfig, Math.max(0, deadline - ServerAccessor.getCurrentTick()));
+                System.out.println("Removing effect " + effectConfig.effectId + " from structure " + structureObject.getId());
+                MobEffectInstance rebuilt = structures_features$removeUniqueEffect(instance, structureObject.getId());
                 serverPlayer.removeEffect(holder);
                 if (rebuilt != null) {
                     serverPlayer.addEffect(rebuilt);
@@ -173,16 +213,16 @@ public class ServerPlayerMixin {
         }
     }
 
-    private MobEffectInstance removeUniqueEffect(MobEffectInstance instance, EffectConfig effectConfig, int remainingTicks) {
+    @Unique
+    private MobEffectInstance structures_features$removeUniqueEffect(MobEffectInstance instance, long structureId) {
         if (instance == null) return null;
 
-        MobEffectInstance nextRebuilt = removeUniqueEffect(((MobEffectInstanceDuck) instance).getHidden(), effectConfig, remainingTicks);
+        System.out.println("Checking effect " + instance.getEffect().getRegisteredName() + " (" + instance.getAmplifier() + " / " + instance.getDuration() + ") with responsible structure: " + ((MobEffectInstanceDuck) instance).getResponsibleStructure() + " against " + structureId);
+
+        MobEffectInstance nextRebuilt = structures_features$removeUniqueEffect(((MobEffectInstanceDuck) instance).getHidden(), structureId);
 
         if (
-            instance.getEffect().getRegisteredName().equals(effectConfig.effectId)
-            && instance.getDuration() == remainingTicks
-            && instance.getAmplifier() == effectConfig.amplifier
-            && instance.isVisible() == effectConfig.visible
+            ((MobEffectInstanceDuck) instance).getResponsibleStructure() == structureId
         ) {
             return nextRebuilt;
         }
@@ -196,5 +236,64 @@ public class ServerPlayerMixin {
             instance.showIcon(),
             nextRebuilt
         );
+    }
+
+    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
+    private void onSaveAdditionalData(net.minecraft.nbt.CompoundTag compoundTag, CallbackInfo ci) {
+        CompoundTag outer = new CompoundTag();
+        System.out.println("deadlines before saving: " + structures_features$effectsDeadline);
+        for (Map.Entry<String, Map<Long, Long>> e : structures_features$effectsDeadline.entrySet()) {
+            CompoundTag inner = new CompoundTag();
+            for (Map.Entry<Long, Long> kv : e.getValue().entrySet()) {
+                inner.putLong(Long.toString(kv.getKey()), kv.getValue() - ServerAccessor.getGameTime());
+                System.out.println("storing deadline for " + e.getKey() + " / " + kv.getKey() + " : " + (kv.getValue() - ServerAccessor.getGameTime()) + "(game time is: " + ServerAccessor.getGameTime() +")");
+            }
+            outer.put(e.getKey(), inner);
+        }
+
+        compoundTag.put("effectsDeadline", outer);
+
+        ListTag structuresNbt = new ListTag();
+        for (var e : this.structures_features$structures) {
+            structuresNbt.add(LongTag.valueOf(e.getId()));
+        }
+        compoundTag.put("structures", structuresNbt);
+
+        compoundTag.putLongArray(
+            "structures",
+            this.structures_features$structures.stream().mapToLong(StructureObject::getId).toArray()
+        );
+    }
+
+    @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
+    private void onReadAdditionalData(net.minecraft.nbt.CompoundTag compoundTag, CallbackInfo ci) {
+        this.structures_features$effectsDeadline = new java.util.HashMap<>();
+
+        if (compoundTag.contains("effectsDeadline", Tag.TAG_COMPOUND)) {
+            CompoundTag outer = compoundTag.getCompound("effectsDeadline");
+
+            for (String outerKey : outer.getAllKeys()) {
+                CompoundTag inner = outer.getCompound(outerKey);
+                Map<Long, Long> map = new java.util.HashMap<>();
+
+                for (String kStr : inner.getAllKeys()) {
+                    try {
+                        long k = Long.parseLong(kStr);
+                        long v = inner.getLong(kStr);
+                        map.put(k, v);
+                        System.out.println("loading deadline for " + outerKey + " / " + k + " : " + (v) + "(game time is: " + ServerAccessor.getGameTime() +")");
+                    } catch (NumberFormatException ignored) { }
+                }
+                this.structures_features$effectsDeadline.put(outerKey, map);
+            }
+        }
+        System.out.println("deadlines after loading: " + structures_features$effectsDeadline);
+
+        this.structures_features$structures.clear();
+        long[] ids = compoundTag.getLongArray("structures");
+        for (long id : ids) {
+            StructureObject test = StructuresStorage.getStructureAtId(id);
+            this.structures_features$structures.add(StructuresStorage.getStructureAtId(id));
+        }
     }
 }

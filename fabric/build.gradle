@@ -36,10 +36,36 @@ dependencies {
     /* Project dependencies */
     modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
 
-    //modCompileOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
     // integrations
     if (rootProject.ext.VERS.containsKey('wraith_waystones_version')) {
+        modCompileOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
         modRuntimeOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir "src/main/resources"
+            srcDir project.file('common/src/main/resources')
+        }
+
+        if (rootProject.ext.VERS.containsKey('wraith_waystones_version')) {
+            def best = pickBest(project, "src/integration/wraith_waystones")
+            if (best && new File(best, "java").exists()) {
+                java {
+                    println ">> Integration wraith_waystones: using ${best}/java"
+                    srcDir "${best}/java"
+                }
+                resources {
+                    srcDir "${best}/resources"
+                }
+            }
+        } else {
+            resources {
+                srcDir "src/integration/default/resources/wraith_waystones"
+            }
+        }
     }
 }
 

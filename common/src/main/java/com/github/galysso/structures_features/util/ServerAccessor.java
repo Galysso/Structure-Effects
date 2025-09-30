@@ -13,7 +13,11 @@ public class ServerAccessor {
         return serverInstance;
     }
 
-    public static int getCurrentTick() {
-        return serverInstance.getTickCount();
+    public static long getGameTime() {
+        return serverInstance.overworld().getGameTime();
+    }
+
+    public static boolean ready() {
+        return serverInstance != null;
     }
 }

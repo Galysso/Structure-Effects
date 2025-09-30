@@ -3,6 +3,7 @@ package com.github.galysso.structures_features.api;
 import com.github.galysso.structures_features.compat.Compat_NBT;
 import com.github.galysso.structures_features.compat.Compat_Registry;
 import com.github.galysso.structures_features.compat.Compat_SavedData;
+import com.github.galysso.structures_features.util.ServerAccessor;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.HolderLookup;
@@ -28,6 +29,7 @@ public class StructuresStorage extends SavedData {
 
     private long counter;
     private Map<InstanceKey, StructureObject> structuresMap;
+    static private Map<Long, StructureObject> structuresById = new HashMap<>();
 
     // Cached player information
     private record PlayerData(BlockPos pos, Map<Long, StructureObject> structures) { }
@@ -49,6 +51,11 @@ public class StructuresStorage extends SavedData {
             }
         }
         return structures;
+    }
+
+    @Nullable
+    public static StructureObject getStructureAtId(long id) {
+        return structuresById.get(id);
     }
 
     @Nullable
@@ -122,6 +129,7 @@ public class StructuresStorage extends SavedData {
     }
 
     public static StructuresStorage fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
+        System.out.println("[" + MOD_ID + "] Loading StructuresStorage from NBT");
         StructuresStorage structuresStorage = new StructuresStorage();
         Optional<Long> counterOpt = Compat_NBT.getLong(nbt, "counter");
         counterOpt.ifPresent(aLong -> structuresStorage.counter = aLong);
@@ -147,6 +155,7 @@ public class StructuresStorage extends SavedData {
 
             StructureObject structureObject = StructureObject.fromNbt(dataOpt.get());
             structuresStorage.structuresMap.put(k, structureObject);
+            structuresById.put(structureObject.getId(), structureObject);
         }
         return structuresStorage;
     }

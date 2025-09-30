@@ -13,6 +13,31 @@ allprojects {
     version = project.mod_version
 }
 
+// Integration
+// Function that converts a minecraft version string into a comparable integer
+def vnum = { String v ->
+    def p = v.tokenize('.').collect { it as int }
+    (p[0]*1_000_000) + ((p.size()>1?p[1]:0)*1_000) + (p.size()>2?p[2]:0)
+}
+
+// Target minecraft version as a comparable integer
+def target = vnum(project.minecraft_version)
+
+ext {
+    INTEGRATION = new Properties()
+
+    // Picks the best matching directory for the given base path and target version
+    pickBest = { Project prj, String rel ->
+        def root = prj.file(rel)              // <- relatif AU MODULE appelant
+        if (!root.exists()) return null
+        def cands = root.listFiles()?.findAll { it.isDirectory() && it.name.startsWith('mc-') } ?: []
+        cands
+            .collect { [dir: it, num: vnum((it.name - 'mc-') as String)] }
+            .findAll { it.num <= target }
+            .max { it.num as long }?.dir
+    }
+}
+
 subprojects {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
@@ -93,6 +118,10 @@ subprojects {
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         }
     }
+
+    // Integration definitions
+    ext.set('INTEGRATION', rootProject.ext.INTEGRATION)
+    ext.set('pickBest', rootProject.ext.pickBest)
 
     // Configure Maven publishing.
     /*publishing {
