@@ -4,6 +4,7 @@ import com.github.galysso.structures_features.StructuresFeatures;
 import me.fzzyhmstrs.fzzy_config.annotations.ConvertFrom;
 import me.fzzyhmstrs.fzzy_config.api.SaveType;
 import me.fzzyhmstrs.fzzy_config.config.Config;
+import me.fzzyhmstrs.fzzy_config.config.ConfigSection;
 import org.jetbrains.annotations.NotNull;
 
 @ConvertFrom(fileName = "server/server_integrations.toml", folder = "structures_features", subfolder = "server")
@@ -17,5 +18,11 @@ public class ServerIntegrationsConfig extends Config {
         return SaveType.SEPARATE;
     }
 
-    public boolean wraith_waystones = true;
+    public BasicSection wraith_waystones = new BasicSection();
+
+    public static class BasicSection extends ConfigSection {
+        public BasicSection() {}
+        public boolean enabled = true;
+    }
+
 }

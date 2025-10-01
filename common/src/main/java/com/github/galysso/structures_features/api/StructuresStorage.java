@@ -3,16 +3,15 @@ package com.github.galysso.structures_features.api;
 import com.github.galysso.structures_features.compat.Compat_NBT;
 import com.github.galysso.structures_features.compat.Compat_Registry;
 import com.github.galysso.structures_features.compat.Compat_SavedData;
-import com.github.galysso.structures_features.util.ServerAccessor;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.LongTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -27,13 +26,10 @@ import static com.github.galysso.structures_features.StructuresFeatures.MOD_ID;
 public class StructuresStorage extends SavedData {
     private record InstanceKey(long startChunk, String structureId) { }
 
-    private long counter;
+    private boolean isOverworld;
+    private static long counter;
     private Map<InstanceKey, StructureObject> structuresMap;
     static private Map<Long, StructureObject> structuresById = new HashMap<>();
-
-    // Cached player information
-    private record PlayerData(BlockPos pos, Map<Long, StructureObject> structures) { }
-    private Map<UUID, PlayerData> playerDataCache = new HashMap<UUID, PlayerData>();
 
     public static Set<StructureObject> getOrCreateStructuresAtPos(ServerLevel world, Map<Structure, LongSet> structureReferences, BlockPos pos) {
         Set<StructureObject> structures = new HashSet<>();
@@ -103,11 +99,14 @@ public class StructuresStorage extends SavedData {
     public static final String ID = "structures_features_structure_registry";
     public StructuresStorage() {
         counter = 0;
+        isOverworld = false;
         structuresMap = new HashMap<>();
     }
 
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registryLookup) {
-        nbt.put("counter", LongTag.valueOf(counter));
+        if (isOverworld) {
+            nbt.putLong("counter", counter);
+        }
 
         ListTag entries = new ListTag();
         for (var structureEntry : structuresMap.entrySet()) {
@@ -131,8 +130,10 @@ public class StructuresStorage extends SavedData {
     public static StructuresStorage fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         System.out.println("[" + MOD_ID + "] Loading StructuresStorage from NBT");
         StructuresStorage structuresStorage = new StructuresStorage();
-        Optional<Long> counterOpt = Compat_NBT.getLong(nbt, "counter");
-        counterOpt.ifPresent(aLong -> structuresStorage.counter = aLong);
+        if (structuresStorage.isOverworld) {
+            Optional<Long> counterOpt = Compat_NBT.getLong(nbt, "counter");
+            counterOpt.ifPresent(aLong -> structuresStorage.counter = aLong);
+        }
 
         Optional<ListTag> entries = Compat_NBT.getList(nbt, "structures", CompoundTag.TAG_COMPOUND);
         if (entries.isEmpty()) return structuresStorage;
@@ -160,7 +161,13 @@ public class StructuresStorage extends SavedData {
         return structuresStorage;
     }
 
+    private void setLevel(ServerLevel level) {
+        this.isOverworld = level.dimension() == Level.OVERWORLD;
+    }
+
     public static StructuresStorage get(ServerLevel level) {
-        return Compat_SavedData.getStructuresStorage(level.getDataStorage());
+        StructuresStorage storage = Compat_SavedData.getStructuresStorage(level.getDataStorage());
+        storage.setLevel(level);
+        return storage;
     }
 }

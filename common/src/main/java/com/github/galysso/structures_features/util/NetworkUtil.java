@@ -11,7 +11,8 @@ public class NetworkUtil {
     public static final ResourceLocation STRUCTURE_FAREWELL_PAYLOAD = StructuresFeatures.identifier("structure_farewell_payload");
 
     public static void receiveWelcome(Minecraft client, String name) {
-        if (name == null || name.isEmpty()) return;
+        if (!StructuresFeatures.CLIENT_CONFIG.displayWelcomes || name == null || name.isEmpty()) return;
+
         client.gui.setOverlayMessage(
             Component.translatable("structures_features.message_prefix.entering").append(name).withStyle(ChatFormatting.DARK_GREEN),
             false
@@ -19,7 +20,8 @@ public class NetworkUtil {
     }
 
     public static void receiveFarewell(Minecraft client, String name) {
-        if (name == null || name.isEmpty()) return;
+        if (!StructuresFeatures.CLIENT_CONFIG.displayFarewells || name == null || name.isEmpty()) return;
+
         client.gui.setOverlayMessage(
             Component.translatable("structures_features.message_prefix.leaving").append(name).withStyle(ChatFormatting.DARK_RED),
             false

@@ -80,7 +80,7 @@ public class WaystoneBlockEntityMixin implements WaystoneBlockEntityDuck {
         if (!structures_features$regionNameInitialized) {
             structures_features$regionNameInitialized = true;
 
-            if (!StructuresFeatures.SERVER_INTEGRATIONS_CONFIG.wraith_waystones) return;
+            if (!StructuresFeatures.SERVER_INTEGRATIONS_CONFIG.wraith_waystones.enabled) return;
 
             Map<Structure, LongSet> structureReferences = world.structureManager().getAllStructuresAt(pos);
             Set<StructureObject> newStructures = StructuresStorage.getOrCreateStructuresAtPos(world, structureReferences, pos);

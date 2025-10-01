@@ -5,6 +5,7 @@ import com.github.galysso.structures_features.api.StructuresStorage;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -17,6 +18,7 @@ public final class StructuresFeaturesMain {
         // --- Événements SERVEUR (GAME BUS) ---
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(this::onLevelLoad);
+        NeoForge.EVENT_BUS.addListener(this::onClientStarted);
     }
 
     private void onServerStarted(final ServerStartedEvent event) {
@@ -27,5 +29,9 @@ public final class StructuresFeaturesMain {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
             StructuresStorage.get(serverLevel);
         }
+    }
+
+    private void onClientStarted(final FMLClientSetupEvent event) {
+        StructuresFeatures.clientInit(net.minecraft.client.Minecraft.getInstance());
     }
 }

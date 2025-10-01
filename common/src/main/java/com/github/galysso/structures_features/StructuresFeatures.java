@@ -1,13 +1,16 @@
 package com.github.galysso.structures_features;
 
 import com.github.galysso.structures_features.api.StructuresStorage;
+import com.github.galysso.structures_features.config.client.ClientConfig;
 import com.github.galysso.structures_features.config.server.ServerEffectsConfig;
 import com.github.galysso.structures_features.config.server.ServerIntegrationsConfig;
 import com.github.galysso.structures_features.config.server.ServerNamesSetsConfig;
 import com.github.galysso.structures_features.util.ServerAccessor;
 import com.github.galysso.structures_features.util.StructureNaming;
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import me.fzzyhmstrs.fzzy_config.api.ConfigApiJava;
 import me.fzzyhmstrs.fzzy_config.api.RegisterType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -23,6 +26,7 @@ public class StructuresFeatures {
     public static ServerNamesSetsConfig SERVER_NAMES_SETS_CONFIG;
     public static ServerEffectsConfig SERVER_EFFECTS_CONFIG;
     public static ServerIntegrationsConfig SERVER_INTEGRATIONS_CONFIG;
+    public static ClientConfig CLIENT_CONFIG;
 
     public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(StructuresFeatures.MOD_ID, path);
@@ -48,6 +52,12 @@ public class StructuresFeatures {
         }
         if (SERVER_INTEGRATIONS_CONFIG == null) {
             SERVER_INTEGRATIONS_CONFIG = ConfigApiJava.registerAndLoadConfig(ServerIntegrationsConfig::new, RegisterType.SERVER);
+        }
+    }
+
+    public static void clientInit(Minecraft minecraft) {
+        if (CLIENT_CONFIG == null) {
+            CLIENT_CONFIG = ConfigApiJava.registerAndLoadConfig(ClientConfig::new, RegisterType.CLIENT);
         }
     }
 }
