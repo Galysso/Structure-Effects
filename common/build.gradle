@@ -21,7 +21,7 @@ dependencies {
 }
 
 // Categories of version-specific sources
-def cats = ["nbt", "registry", "saved_data", "server_player"]
+def cats = ["nbt", "registry", "saved_data", "server_player", "value_in_out"]
 
 // Adds the found directory to the source sets, if any
 sourceSets {

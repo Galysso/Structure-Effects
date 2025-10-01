@@ -56,19 +56,21 @@ public abstract class MobEffectInstanceMixin implements MobEffectInstanceDuck {
                     com.mojang.datafixers.util.Pair<net.minecraft.world.effect.MobEffectInstance, T>>
             decode(com.mojang.serialization.DynamicOps<T> ops, T input) {
 
-                long marker = -1L;
+                Optional<Long> marker = Optional.empty();
                 if (input instanceof net.minecraft.nbt.Tag t && t instanceof net.minecraft.nbt.CompoundTag ct) {
-                    if (ct.contains("responsibleStructure", net.minecraft.nbt.Tag.TAG_LONG)) {
-                        marker = ct.getLong("responsibleStructure");
-                    }
+                    marker = Compat_NBT.getLong(ct, "responsibleStructure");
                 }
 
-                long finalMarker = marker;
-                return base.decode(ops, input).map(p -> {
-                    ((com.github.galysso.structures_features.duck.MobEffectInstanceDuck)(Object) p.getFirst())
-                            .setResponsibleStructure(finalMarker);
-                    return p;
-                });
+                if (marker.isPresent()) {
+                    final long finalMarker = marker.get();
+                    return base.decode(ops, input).map(p -> {
+                        ((com.github.galysso.structures_features.duck.MobEffectInstanceDuck) (Object) p.getFirst())
+                                .setResponsibleStructure(finalMarker);
+                        return p;
+                    });
+                }
+
+                return base.decode(ops, input);
             }
 
             @Override

@@ -5,6 +5,7 @@ import com.github.galysso.structures_features.config.client.ClientConfig;
 import com.github.galysso.structures_features.config.server.ServerEffectsConfig;
 import com.github.galysso.structures_features.config.server.ServerIntegrationsConfig;
 import com.github.galysso.structures_features.config.server.ServerNamesSetsConfig;
+import com.github.galysso.structures_features.helper.PlatformLoader;
 import com.github.galysso.structures_features.util.ServerAccessor;
 import com.github.galysso.structures_features.util.StructureNaming;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
@@ -58,6 +59,13 @@ public class StructuresFeatures {
     public static void clientInit(Minecraft minecraft) {
         if (CLIENT_CONFIG == null) {
             CLIENT_CONFIG = ConfigApiJava.registerAndLoadConfig(ClientConfig::new, RegisterType.CLIENT);
+        }
+    }
+
+    public static void onClientEnteredWorld() {
+        if (CLIENT_CONFIG != null) {
+            PlatformLoader.sendConfigFarewell(CLIENT_CONFIG.displayFarewells.get());
+            PlatformLoader.sendConfigWelcome(CLIENT_CONFIG.displayWelcomes.get());
         }
     }
 }

@@ -3,13 +3,13 @@ package com.github.galysso.structures_features.mixin;
 import com.github.galysso.structures_features.StructuresFeatures;
 import com.github.galysso.structures_features.api.StructureObject;
 import com.github.galysso.structures_features.api.StructuresStorage;
-import com.github.galysso.structures_features.compat.Compat_NBT;
-import com.github.galysso.structures_features.compat.Compat_Registry;
-import com.github.galysso.structures_features.compat.Compat_ServerPlayer;
+import com.github.galysso.structures_features.compat.*;
 import com.github.galysso.structures_features.config.server.elements.EffectConfig;
 import com.github.galysso.structures_features.duck.MobEffectInstanceDuck;
+import com.github.galysso.structures_features.duck.ServerPlayerDuck;
 import com.github.galysso.structures_features.helper.PlatformLoader;
 import com.github.galysso.structures_features.util.ServerAccessor;
+import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -25,16 +25,17 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.structure.Structure;
+//import net.minecraft.world.level.storage.ValueInput;
+//import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
 
 @Mixin(ServerPlayer.class)
-public class ServerPlayerMixin {
+public class ServerPlayerMixin implements ServerPlayerDuck {
     // Data for tracking structures
     @Unique
     private ChunkPos structures_features$chunkPos = null;
@@ -207,57 +208,100 @@ public class ServerPlayerMixin {
         );
     }
 
-    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void onSaveAdditionalData(net.minecraft.nbt.CompoundTag compoundTag, CallbackInfo ci) {
-        CompoundTag outer = new CompoundTag();
-        for (Map.Entry<String, Set<Long>> e : structures_features$effects.entrySet()) {
-            ListTag inner = new ListTag();
-            for (Long kv : e.getValue()) {
-                inner.add(LongTag.valueOf(kv));
-            }
-            outer.put(e.getKey(), inner);
-        }
-        compoundTag.put("effectsDeadline", outer);
-
-        ListTag structuresNbt = new ListTag();
-        for (var e : this.structures_features$structures) {
-            structuresNbt.add(LongTag.valueOf(e.getId()));
-        }
-        compoundTag.put("structures", structuresNbt);
-
-        compoundTag.putLongArray(
-            "structures",
-            this.structures_features$structures.stream().mapToLong(StructureObject::getId).toArray()
-        );
+    @Inject(
+        method = "addAdditionalSaveData",
+        at = @At("TAIL"),
+        require = 1
+    )
+    private void onSaveAdditionalData(@Coerce Object outputObject, CallbackInfo ci) {
+        Compat_ServerPlayer.saveAdditionalData((ServerPlayer) (Object) this, outputObject);
     }
 
-    @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void onReadAdditionalData(net.minecraft.nbt.CompoundTag compoundTag, CallbackInfo ci) {
+    @Inject(
+        method = "readAdditionalSaveData",
+        at = @At("TAIL"),
+        require = 1
+    )
+    private void onReadAdditionalData(@Coerce Object inputObject, CallbackInfo ci) {
+        Compat_ServerPlayer.readAdditionalData((ServerPlayer) (Object) this, inputObject);
+    }
+
+    @Override
+    public void setStructuresEffects(Map<String, Set<Long>> structures_features$effects) {
+        this.structures_features$effects = structures_features$effects;
+    }
+
+    @Override
+    public void setStructureObjects(Set<StructureObject> structures_features$structures) {
+        this.structures_features$structures = structures_features$structures;
+    }
+
+    @Override
+    public Map<String, Set<Long>> getStructuresEffects() {
+        return this.structures_features$effects;
+    }
+
+    @Override
+    public Set<StructureObject> getStructureObjects() {
+        return this.structures_features$structures;
+    }
+
+    // ----- 1.21.6+ -----
+    /*@Group(name = "save_data", min = 1, max = 2)
+    @Inject(
+        method = "addAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueOutput;)V",
+        at = @At("TAIL"),
+        require = 0
+    )
+    private void onSaveAdditionalData(@Coerce Object valueOutput, CallbackInfo ci) {
+        // Map<String, Set<Long>> -> Codec<Map<String, List<Long>>>
+        var EFFECTS_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(Codec.LONG));
+
+        // 1) effectsDeadline : map<string, list<long>>
+        java.util.Map<String, java.util.List<Long>> effectsForCodec = new java.util.HashMap<>();
+        for (var e : structures_features$effects.entrySet()) {
+            effectsForCodec.put(
+                    e.getKey(),
+                    e.getValue().stream().map(Long::longValue).toList()
+            );
+        }
+        Compat_ValueOutput.store(valueOutput, "effectsDeadline", EFFECTS_CODEC, effectsForCodec);
+
+        // 2) structures : list<long> (ids)
+        var ids = structures_features$structures.stream()
+                .map(s -> s.getId())
+                .map(Long::longValue)
+                .toList();
+
+        Compat_ValueOutput.store(valueOutput,"structures", Codec.list(Codec.LONG), ids);
+    }
+
+    @Group(name = "load_data", min = 1, max = 2)
+    @Inject(
+        method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V",
+        at = @At("TAIL"),
+        require = 0
+    )
+    private void onReadAdditionalData(@Coerce Object valueInput, CallbackInfo ci) {
+        // mêmes Codecs que côté save
+        var EFFECTS_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(Codec.LONG));
+        var LONG_LIST     = Codec.list(Codec.LONG);
+
+        // Réinit
         this.structures_features$effects = new java.util.HashMap<>();
 
-        Optional<CompoundTag> outerOpt = Compat_NBT.getCompound(compoundTag, "effectsDeadline");
-        if (outerOpt.isPresent()) {
-            for (String outerKey : Compat_NBT.getKeysSet(outerOpt.get())) {
-                Optional<ListTag> idsOpt = Compat_NBT.getList(outerOpt.get(), outerKey, CompoundTag.TAG_LONG);
-                if (idsOpt.isEmpty()) continue;
-
-                Set<Long> set = new java.util.HashSet<>();
-                for (Tag id : idsOpt.get()) {
-                    Optional<Long> idOpt = Compat_NBT.tagToLong(id);
-                    if (idOpt.isEmpty()) continue;
-                    set.add(idOpt.get());
-                }
-                this.structures_features$effects.put(outerKey, set);
-            }
+        // 1) effectsDeadline
+        var effectsMap = Compat_ValueInput.read(valueInput, "effectsDeadline", EFFECTS_CODEC).orElse(java.util.Map.of());
+        for (var e : effectsMap.entrySet()) {
+            java.util.Set<Long> set = new java.util.HashSet<>(e.getValue());
+            this.structures_features$effects.put(e.getKey(), set);
         }
 
-        Optional<long[]> idsOpt = Compat_NBT.getLongArray(compoundTag, "structures");
-        if (idsOpt.isPresent()) {
-            System.out.println("[" + StructuresFeatures.MOD_ID + "]: " + Arrays.toString(idsOpt.get()));
-            for (long id : idsOpt.get()) {
-                this.structures_features$structures.add(StructuresStorage.getStructureAtId(id));
-            }
+        // 2) structures
+        var ids = Compat_ValueInput.read(valueInput, "structures", LONG_LIST).orElse(java.util.List.of());
+        for (long id : ids) {
+            var so = StructuresStorage.getStructureAtId(id);
+            if (so != null) this.structures_features$structures.add(so);
         }
-        System.out.println("[" + StructuresFeatures.MOD_ID + "]: " + this.structures_features$structures);
-    }
+    }*/
 }

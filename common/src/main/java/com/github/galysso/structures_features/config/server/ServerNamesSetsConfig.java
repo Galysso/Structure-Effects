@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-@ConvertFrom(fileName = "server_names_sets.toml", folder = "structures_features", subfolder = "server")
+//@ConvertFrom(fileName = "server_names_sets.toml", folder = "structures_features", subfolder = "server")
 public class ServerNamesSetsConfig extends Config {
 
     public ServerNamesSetsConfig() {
