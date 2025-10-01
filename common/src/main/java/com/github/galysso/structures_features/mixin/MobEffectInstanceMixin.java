@@ -27,6 +27,11 @@ public abstract class MobEffectInstanceMixin implements MobEffectInstanceDuck {
     }
 
     @Override
+    public void setHidden(MobEffectInstance instance) {
+        this.hiddenEffect = instance;
+    }
+
+    @Override
     public void setResponsibleStructure(long structureId) {
         this.responsibleStructure = structureId;
     }
@@ -74,6 +79,27 @@ public abstract class MobEffectInstanceMixin implements MobEffectInstanceDuck {
 
     @Inject(
         method = "update(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
+        at = @At("HEAD")
+    )
+    private void structures_features$keepRelevantHiddenEffects(MobEffectInstance mobEffectInstance, CallbackInfoReturnable<Boolean> cir) {
+        if (((MobEffectInstanceDuck) mobEffectInstance).getResponsibleStructure() == -1L) return;
+
+
+        MobEffectInstance thisEffect = (MobEffectInstance) (Object) this;
+        boolean dominates = !thisEffect.isInfiniteDuration() && (
+                    mobEffectInstance.isInfiniteDuration()
+                    || mobEffectInstance.getAmplifier() >= thisEffect.getAmplifier()
+                );
+        if (!dominates) return;
+
+        MobEffectInstance previous = new MobEffectInstance(thisEffect);
+
+        ((MobEffectInstanceDuck) previous).setHidden(hiddenEffect);
+        this.hiddenEffect = previous;
+    }
+
+    @Inject(
+        method = "update(Lnet/minecraft/world/effect/MobEffectInstance;)Z",
         at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/world/effect/MobEffectInstance;duration:I",
@@ -81,7 +107,7 @@ public abstract class MobEffectInstanceMixin implements MobEffectInstanceDuck {
             shift = At.Shift.AFTER
         )
     )
-    private void sf$copyMarkerUpdate(MobEffectInstance mobEffectInstance, CallbackInfoReturnable<Boolean> cir) {
+    private void structures_features$copyMarkerUpdate(MobEffectInstance mobEffectInstance, CallbackInfoReturnable<Boolean> cir) {
         this.responsibleStructure = ((MobEffectInstanceDuck) mobEffectInstance).getResponsibleStructure();
     }
 }
