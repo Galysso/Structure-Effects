@@ -37,7 +37,9 @@ dependencies {
     modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.ext.VERS.fabric_fzzy_config_version}"
 
     // integrations
+    // Wraith Waystones
     if (rootProject.ext.VERS.containsKey('wraith_waystones_version')) {
+        modRuntimeOnly "io.wispforest:owo-lib:${rootProject.ext.VERS.owo_lib_version}"
         modCompileOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
         modRuntimeOnly "maven.modrinth:fwaystones:${rootProject.ext.VERS.wraith_waystones_version}"
     }

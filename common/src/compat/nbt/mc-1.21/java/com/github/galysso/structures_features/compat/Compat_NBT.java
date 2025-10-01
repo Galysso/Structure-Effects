@@ -6,6 +6,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -65,6 +67,22 @@ public class Compat_NBT {
     public static Optional<String> getStringFromList(ListTag nbt, int index) {
         if (nbt.size() > index) {
             return Optional.of(nbt.getString(index));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<long[]> getLongArray(CompoundTag nbt, String key) {
+        if (nbt.contains(key)) {
+            return Optional.of(nbt.getLongArray(key));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<Long> tagToLong(Tag tag) {
+        if (tag instanceof LongTag) {
+            return Optional.of(((net.minecraft.nbt.LongTag) tag).getAsLong());
         } else {
             return Optional.empty();
         }

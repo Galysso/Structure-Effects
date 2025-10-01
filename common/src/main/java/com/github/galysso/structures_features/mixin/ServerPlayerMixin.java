@@ -3,6 +3,7 @@ package com.github.galysso.structures_features.mixin;
 import com.github.galysso.structures_features.StructuresFeatures;
 import com.github.galysso.structures_features.api.StructureObject;
 import com.github.galysso.structures_features.api.StructuresStorage;
+import com.github.galysso.structures_features.compat.Compat_NBT;
 import com.github.galysso.structures_features.compat.Compat_Registry;
 import com.github.galysso.structures_features.compat.Compat_ServerPlayer;
 import com.github.galysso.structures_features.config.server.elements.EffectConfig;
@@ -234,25 +235,29 @@ public class ServerPlayerMixin {
     private void onReadAdditionalData(net.minecraft.nbt.CompoundTag compoundTag, CallbackInfo ci) {
         this.structures_features$effects = new java.util.HashMap<>();
 
-        if (compoundTag.contains("effectsDeadline", Tag.TAG_COMPOUND)) {
-            CompoundTag outer = compoundTag.getCompound("effectsDeadline");
+        Optional<CompoundTag> outerOpt = Compat_NBT.getCompound(compoundTag, "effectsDeadline");
+        if (outerOpt.isPresent()) {
+            for (String outerKey : Compat_NBT.getKeysSet(outerOpt.get())) {
+                Optional<ListTag> idsOpt = Compat_NBT.getList(outerOpt.get(), outerKey, CompoundTag.TAG_LONG);
+                if (idsOpt.isEmpty()) continue;
 
-            for (String outerKey : outer.getAllKeys()) {
-                long[] ids = outer.getLongArray(outerKey);
                 Set<Long> set = new java.util.HashSet<>();
-
-                for (long id : ids) {
-                    set.add(id);
+                for (Tag id : idsOpt.get()) {
+                    Optional<Long> idOpt = Compat_NBT.tagToLong(id);
+                    if (idOpt.isEmpty()) continue;
+                    set.add(idOpt.get());
                 }
                 this.structures_features$effects.put(outerKey, set);
             }
         }
 
-        this.structures_features$structures.clear();
-        long[] ids = compoundTag.getLongArray("structures");
-        for (long id : ids) {
-            StructureObject test = StructuresStorage.getStructureAtId(id);
-            this.structures_features$structures.add(StructuresStorage.getStructureAtId(id));
+        Optional<long[]> idsOpt = Compat_NBT.getLongArray(compoundTag, "structures");
+        if (idsOpt.isPresent()) {
+            System.out.println("[" + StructuresFeatures.MOD_ID + "]: " + Arrays.toString(idsOpt.get()));
+            for (long id : idsOpt.get()) {
+                this.structures_features$structures.add(StructuresStorage.getStructureAtId(id));
+            }
         }
+        System.out.println("[" + StructuresFeatures.MOD_ID + "]: " + this.structures_features$structures);
     }
 }

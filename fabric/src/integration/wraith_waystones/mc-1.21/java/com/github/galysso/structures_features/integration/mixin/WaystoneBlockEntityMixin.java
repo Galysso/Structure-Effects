@@ -6,6 +6,8 @@ import com.github.galysso.structures_features.api.StructuresStorage;
 import com.github.galysso.structures_features.integration.duck.WaystoneBlockEntityDuck;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.sql.Struct;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,16 +30,17 @@ public class WaystoneBlockEntityMixin implements WaystoneBlockEntityDuck {
     private String name;
 
     @Unique
-    boolean structures_features$regionNameInitialized;
+    boolean structures_features$regionNameInitialized = false;
 
-    @Redirect(
-        method = "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V",
-        at = @At("TAIL"),
-        remap = false,
-        require = 1
+    @Inject(
+            method = "Lwraith/fwaystones/block/WaystoneBlockEntity;saveAdditional(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V",
+            at = @At("TAIL"),
+            remap = false,
+            require = 0
     )
-    private void sf$skipGenerateAndProvideName() {
-        structures_features$regionNameInitialized = false;
+    private void sructure_features$saveRegionNameInitialized_1_21(CompoundTag nbt, HolderLookup.Provider lookup, CallbackInfo ci) {
+        System.out.println("Saving waystone_is_region_name_initialized: " + this.structures_features$regionNameInitialized);
+        nbt.putBoolean("waystone_is_region_name_initialized", this.structures_features$regionNameInitialized);
     }
 
     @Inject(
@@ -51,16 +53,6 @@ public class WaystoneBlockEntityMixin implements WaystoneBlockEntityDuck {
         if (nbt.contains("waystone_is_region_name_initialized")) {
             this.structures_features$regionNameInitialized = nbt.getBoolean("waystone_is_region_name_initialized");
         }
-    }
-
-    @Inject(
-        method = "Lwraith/fwaystones/block/WaystoneBlockEntity;createTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;",
-        at = @At("TAIL"),
-        remap = false,
-        require = 1
-    )
-    private void sf$saveRegionNameInitialized(net.minecraft.nbt.CompoundTag nbt, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.nbt.CompoundTag> cir) {
-        nbt.putBoolean("waystone_is_region_name_initialized", this.structures_features$regionNameInitialized);
     }
 
     @Inject(
