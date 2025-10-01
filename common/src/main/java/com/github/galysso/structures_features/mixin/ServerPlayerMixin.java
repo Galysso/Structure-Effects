@@ -136,7 +136,7 @@ public class ServerPlayerMixin {
 
             MobEffectInstance newEffect = new MobEffectInstance(
                 holder,
-                effectConfig.duration * 20,
+                effectConfig.duration <= 0 ? MobEffectInstance.INFINITE_DURATION : effectConfig.duration * 20,
                 effectConfig.amplifier,
                 effectConfig.ambient,
                 effectConfig.visible,

@@ -29,9 +29,9 @@ public class EffectConfig {
 
     public EffectConfig() {
         this(
-            "minecraft:movement_speed",
-            1,
-            60,
+            "minecraft:regeneration",
+            0,
+            0,
             true,
             true,
             true,
