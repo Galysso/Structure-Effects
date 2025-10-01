@@ -2,9 +2,6 @@ package com.github.galysso.structures_features.platform.neoforge;
 
 import com.github.galysso.structures_features.StructuresFeatures;
 import com.github.galysso.structures_features.api.StructuresStorage;
-import com.github.galysso.structures_features.config.ServerNamesSetsConfig;
-import com.github.galysso.structures_features.util.ServerAccessor;
-import com.github.galysso.structures_features.util.StructureNaming;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;

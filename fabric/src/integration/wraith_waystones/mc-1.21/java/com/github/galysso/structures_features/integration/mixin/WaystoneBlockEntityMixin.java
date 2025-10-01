@@ -1,5 +1,6 @@
 package com.github.galysso.structures_features.integration.mixin;
 
+import com.github.galysso.structures_features.StructuresFeatures;
 import com.github.galysso.structures_features.api.StructureObject;
 import com.github.galysso.structures_features.api.StructuresStorage;
 import com.github.galysso.structures_features.integration.duck.WaystoneBlockEntityDuck;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.sql.Struct;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,6 +79,9 @@ public class WaystoneBlockEntityMixin implements WaystoneBlockEntityDuck {
     public void structures_features$initializeRegionName(ServerLevel world, BlockPos pos) {
         if (!structures_features$regionNameInitialized) {
             structures_features$regionNameInitialized = true;
+
+            if (!StructuresFeatures.SERVER_INTEGRATIONS_CONFIG.wraith_waystones) return;
+
             Map<Structure, LongSet> structureReferences = world.structureManager().getAllStructuresAt(pos);
             Set<StructureObject> newStructures = StructuresStorage.getOrCreateStructuresAtPos(world, structureReferences, pos);
             if (!newStructures.isEmpty()) {

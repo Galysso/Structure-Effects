@@ -1,8 +1,9 @@
 package com.github.galysso.structures_features;
 
 import com.github.galysso.structures_features.api.StructuresStorage;
-import com.github.galysso.structures_features.config.ServerEffectsConfig;
-import com.github.galysso.structures_features.config.ServerNamesSetsConfig;
+import com.github.galysso.structures_features.config.server.ServerEffectsConfig;
+import com.github.galysso.structures_features.config.server.ServerIntegrationsConfig;
+import com.github.galysso.structures_features.config.server.ServerNamesSetsConfig;
 import com.github.galysso.structures_features.util.ServerAccessor;
 import com.github.galysso.structures_features.util.StructureNaming;
 import me.fzzyhmstrs.fzzy_config.api.ConfigApiJava;
@@ -21,6 +22,7 @@ public class StructuresFeatures {
 
     public static ServerNamesSetsConfig SERVER_NAMES_SETS_CONFIG;
     public static ServerEffectsConfig SERVER_EFFECTS_CONFIG;
+    public static ServerIntegrationsConfig SERVER_INTEGRATIONS_CONFIG;
 
     public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(StructuresFeatures.MOD_ID, path);
@@ -43,6 +45,9 @@ public class StructuresFeatures {
         }
         if (StructuresFeatures.SERVER_EFFECTS_CONFIG == null) {
             StructuresFeatures.SERVER_EFFECTS_CONFIG = ConfigApiJava.registerAndLoadConfig(ServerEffectsConfig::new, RegisterType.SERVER);
+        }
+        if (SERVER_INTEGRATIONS_CONFIG == null) {
+            SERVER_INTEGRATIONS_CONFIG = ConfigApiJava.registerAndLoadConfig(ServerIntegrationsConfig::new, RegisterType.SERVER);
         }
     }
 }

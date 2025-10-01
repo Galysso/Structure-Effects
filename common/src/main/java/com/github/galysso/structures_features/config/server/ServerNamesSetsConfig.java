@@ -1,6 +1,7 @@
-package com.github.galysso.structures_features.config;
+package com.github.galysso.structures_features.config.server;
 
 import com.github.galysso.structures_features.StructuresFeatures;
+import com.github.galysso.structures_features.config.server.data.DefaultNames;
 import me.fzzyhmstrs.fzzy_config.annotations.ConvertFrom;
 import me.fzzyhmstrs.fzzy_config.api.SaveType;
 import me.fzzyhmstrs.fzzy_config.config.Config;

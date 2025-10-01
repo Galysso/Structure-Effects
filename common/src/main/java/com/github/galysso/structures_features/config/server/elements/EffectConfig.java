@@ -1,4 +1,4 @@
-package com.github.galysso.structures_features.config.elements;
+package com.github.galysso.structures_features.config.server.elements;
 
 public class EffectConfig {
     public String effectId;

@@ -1,4 +1,4 @@
-package com.github.galysso.structures_features.config;
+package com.github.galysso.structures_features.config.server.data;
 
 import java.util.Set;
 
