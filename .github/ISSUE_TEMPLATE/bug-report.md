@@ -7,7 +7,9 @@ assignees: Galysso
 
 ---
 
-Before posting, please check that you are using the latest version of Structures Features for your Minecraft version.
+Before posting, please check that:
+- You are using the latest version of Structures Features for your Minecraft version.
+- The same bug has not already been reported by another member.
 
 **Bug description**
 A clear and concise description of what the bug is.

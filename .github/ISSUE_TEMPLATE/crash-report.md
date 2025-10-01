@@ -7,7 +7,9 @@ assignees: Galysso
 
 ---
 
-Before posting, please check that you are using the latest version of Structures Features for your Minecraft version.
+Before posting, please check thatt:
+- You are using the latest version of Structures Features for your Minecraft version.
+- The same crash has not already been reported by another member.
 
 **Other mods**
 Provide the minimal set of mods to reproduce the error with exaxct version used for each.
