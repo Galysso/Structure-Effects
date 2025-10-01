@@ -15,7 +15,6 @@ public final class StructuresFeaturesMain {
     public StructuresFeaturesMain(IEventBus modEventBus) {
         StructuresFeatures.LOGGER.info("Initialization (NeoForge).");
 
-        // --- Événements SERVEUR (GAME BUS) ---
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(this::onLevelLoad);
         NeoForge.EVENT_BUS.addListener(this::onClientStarted);

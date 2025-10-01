@@ -94,6 +94,4 @@ public class WaystoneBlockEntityMixin implements WaystoneBlockEntityDuck {
             }
         }
     }
-
-    //public static Set<StructureObject> getOrCreateStructuresAtPos(ServerLevel world, Map<Structure, LongSet> structureReferences, BlockPos pos)
 }
