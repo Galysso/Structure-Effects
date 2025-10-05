@@ -8,25 +8,17 @@ import com.github.galysso.structures_features.config.server.elements.EffectConfi
 import com.github.galysso.structures_features.duck.MobEffectInstanceDuck;
 import com.github.galysso.structures_features.duck.ServerPlayerDuck;
 import com.github.galysso.structures_features.helper.PlatformLoader;
-import com.github.galysso.structures_features.util.ServerAccessor;
-import com.mojang.serialization.Codec;
+import com.github.galysso.structures_features.util.EffectUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.*;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.structure.Structure;
-//import net.minecraft.world.level.storage.ValueInput;
-//import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
@@ -36,6 +28,9 @@ import java.util.*;
 
 @Mixin(ServerPlayer.class)
 public class ServerPlayerMixin implements ServerPlayerDuck {
+    // Lazy data cleaning
+    private boolean structures_features$cleaned = false;
+
     // Data for tracking structures
     @Unique
     private ChunkPos structures_features$chunkPos = null;
@@ -46,7 +41,7 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
     @Unique
     private Map<Structure, LongSet> structures_features$structureReferences;
     @Unique
-    private Set<StructureObject> structures_features$structures = new HashSet<StructureObject>();
+    private Set<StructureObject> structures_features$structures;
 
     // Tick counter to limit structure checks
     @Unique
@@ -54,10 +49,18 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
 
     // Data for effects management
     @Unique
-    private Map<String, Set<Long>> structures_features$effects = new java.util.HashMap<>();
+    private Map<Long, Set<String>> structures_features$effects;
+
+     @Inject(method = "<init>", at = @At("TAIL"))
+    private void onInit(CallbackInfo ci) {
+        structures_features$structureReferences = Map.of();
+        structures_features$effects = new HashMap<>();
+        structures_features$structures = new HashSet<>();
+     }
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
+        structures_features$cleanData();
         structures_features$updateStructures();
     }
 
@@ -117,28 +120,23 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
     private void structures_features$addEffects(StructureObject structureObject) {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
-        List<EffectConfig> effects = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
+        Map<String, ? extends EffectConfig> effects = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
         if (effects == null) return;
 
-        for (var effectConfig : effects) {
-            ResourceLocation id = ResourceLocation.tryParse(effectConfig.effectId);
-            if (id == null) continue;
+        for (var entryEffectConfig : effects.entrySet()) {
+            String effectId = entryEffectConfig.getKey();
+            EffectConfig effectConfig = entryEffectConfig.getValue();
 
-            RegistryAccess registryAccess = Compat_ServerPlayer.getServerLevel(serverPlayer).registryAccess();
-            Registry<MobEffect> reg = Compat_Registry.getRegistry(structures_features$world, Registries.MOB_EFFECT);
-            ResourceKey<MobEffect> key = ResourceKey.create(Registries.MOB_EFFECT, id);
-            Holder<MobEffect> holder = Compat_Registry.getHolder(reg, key).orElse(null);
-            if (holder == null) continue;
+            Optional<Holder<MobEffect>> holderOpt = EffectUtil.getMobEffectHolder(effectId);
+            if (holderOpt.isEmpty()) continue;
 
-            Set<Long> structuresWithTheEffect = structures_features$effects.computeIfAbsent(effectConfig.effectId, k -> new HashSet<Long>());
+            Set<String> effectsForTheStructure = structures_features$effects.computeIfAbsent(structureObject.getId(), k -> new HashSet<String>());
 
-            structuresWithTheEffect.add(
-                structureObject.getId()
-            );
+            effectsForTheStructure.add(effectId);
 
             MobEffectInstance newEffect = new MobEffectInstance(
-                holder,
-                effectConfig.duration <= 0 ? MobEffectInstance.INFINITE_DURATION : effectConfig.duration * 20,
+                holderOpt.get(),
+                effectConfig.duration < 0 ? MobEffectInstance.INFINITE_DURATION : effectConfig.duration * 20,
                 effectConfig.amplifier,
                 effectConfig.ambient,
                 effectConfig.visible,
@@ -154,34 +152,32 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
         ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
 
 
-        List<EffectConfig> effects = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
-        if (effects == null) return;
+        Map<String, ? extends EffectConfig> effectConfigs = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
 
-        Registry<MobEffect> reg = Compat_Registry.getRegistry(Compat_ServerPlayer.getServerLevel(serverPlayer), Registries.MOB_EFFECT);
+        Set<String> effectsAssociatedWithTheStructure = structures_features$effects.get(structureObject.getId());
 
-        for (var effectConfig : effects) {
-            Set<Long> structuresWithTheEffect = structures_features$effects.get(effectConfig.effectId);
-            if (structuresWithTheEffect == null) continue;
+        for (var innerIt = effectsAssociatedWithTheStructure.iterator(); innerIt.hasNext(); ) {
+            String effectId = innerIt.next();
+            EffectConfig effectConfig = effectConfigs == null ? null : effectConfigs.get(effectId);
 
-            structuresWithTheEffect.remove(structureObject.getId());
+            if (effectConfig == null || effectConfig.clearedWhenLeaving) {
+                Optional<Holder<MobEffect>> holderOpt = EffectUtil.getMobEffectHolder(effectId);
+                if (holderOpt.isEmpty()) continue;
 
-            if (effectConfig.clearedWhenLeaving) {
-                ResourceLocation id = ResourceLocation.tryParse(effectConfig.effectId);
-                if (id == null) continue;
+                Optional<MobEffectInstance> instance = EffectUtil.getMobEffectInstance(serverPlayer, holderOpt.get()); //serverPlayer.getEffect(holder);
+                if (instance.isEmpty()) continue;
 
-                ResourceKey<MobEffect> key = ResourceKey.create(Registries.MOB_EFFECT, id);
-                Holder<MobEffect> holder = Compat_Registry.getHolder(reg, key).orElse(null);
-                if (holder == null) continue;
-
-                MobEffectInstance instance = serverPlayer.getEffect(holder);
-                if (instance == null) continue;
-
-                MobEffectInstance rebuilt = structures_features$removeUniqueEffect(instance, structureObject.getId());
-                serverPlayer.removeEffect(holder);
+                MobEffectInstance rebuilt = structures_features$removeUniqueEffect(instance.get(), structureObject.getId());
+                serverPlayer.removeEffect(holderOpt.get());
                 if (rebuilt != null) {
                     serverPlayer.addEffect(rebuilt);
                 }
+
+                innerIt.remove();
             }
+        }
+        if (effectsAssociatedWithTheStructure.isEmpty()) {
+            structures_features$effects.remove(structureObject.getId());
         }
     }
 
@@ -226,8 +222,98 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
         Compat_ServerPlayer.readAdditionalData((ServerPlayer) (Object) this, inputObject);
     }
 
+    @Unique
+    public void structures_features$cleanData() {
+        if (structures_features$cleaned) return;
+        structures_features$cleaned = true;
+
+        // Remove effects which do not have a valid config for the responsible structure anymore, or reduce the time if the config changed for a shorter duration
+        var outerIt = structures_features$effects.entrySet().iterator();
+        while (outerIt.hasNext()) {
+            var entryStructuresEffects = outerIt.next();
+            long structureId = entryStructuresEffects.getKey();
+            Set<String> effectIds = entryStructuresEffects.getValue();
+            StructureObject structureObject = StructuresStorage.getStructureAtId(structureId);
+            for (var innerIt = effectIds.iterator(); innerIt.hasNext(); ) {
+                String effectId = innerIt.next();
+
+                Optional<Holder<MobEffect>> holderOpt = EffectUtil.getMobEffectHolder(effectId);
+                if (holderOpt.isEmpty()) {
+                    innerIt.remove();
+                    continue;
+                }
+
+                ServerPlayer serverPlayer = (ServerPlayer) (Object) this;
+                Optional<MobEffectInstance> instanceOpt = EffectUtil.getMobEffectInstance(serverPlayer, holderOpt.get());
+                if (instanceOpt.isEmpty()) {
+                    innerIt.remove();
+                    continue;
+                }
+
+                Map<String, ? extends EffectConfig> effectConfigs = StructuresFeatures.SERVER_EFFECTS_CONFIG.structuresEffects.get(structureObject.getStructureId().toString());
+                EffectConfig effectConfig = effectConfigs == null ? null : effectConfigs.get(effectId);
+
+                System.out.println("Structures: " + structures_features$structures);
+
+                if (
+                    structureObject == null // structure somehow does not exist anymore
+                        || effectConfig == null // structure does not have any effect config anymore
+                        || ( // effect is configured to be removed when leaving, but player is not in the structure anymore
+                            effectConfig.clearedWhenLeaving
+                            && !structures_features$structures.contains(structureObject)
+                        )
+                ) {
+                    innerIt.remove();
+                    MobEffectInstance rebuilt = structures_features$removeUniqueEffect(instanceOpt.get(), structureId);
+                    serverPlayer.removeEffect(holderOpt.get());
+                    if (rebuilt != null) {
+                        serverPlayer.addEffect(rebuilt);
+                    }
+                } else {
+                    MobEffectInstance instanceIter = instanceOpt.get();
+                    while (
+                        instanceIter != null && ((MobEffectInstanceDuck) instanceIter).getResponsibleStructure() != structureId
+                    ) {
+                        instanceIter = ((MobEffectInstanceDuck) instanceIter).getHidden();
+                    }
+
+                    if (instanceIter != null && ((MobEffectInstanceDuck) instanceIter).getResponsibleStructure() == structureId) {
+                        boolean changeAmplifier = instanceIter.getAmplifier() != effectConfig.amplifier;
+                        boolean changeDuration = (!instanceIter.isInfiniteDuration() && !effectConfig.isInfiniteDuration() && instanceIter.getDuration() > effectConfig.duration * 20) || (instanceIter.isInfiniteDuration() != effectConfig.isInfiniteDuration());
+                        boolean changeAmbient = instanceIter.isAmbient() != effectConfig.ambient;
+                        boolean changeVisible = instanceIter.isVisible() != effectConfig.visible;
+                        boolean changeIcon = instanceIter.showIcon() != effectConfig.showIcon;
+
+                        if (!changeAmplifier && !changeDuration && !changeAmbient && !changeVisible && !changeIcon) {
+                            continue;
+                        }
+
+                        structures_features$removeUniqueEffect(instanceOpt.get(), structureId);
+                        MobEffectInstance rebuilt = new MobEffectInstance(
+                            instanceIter.getEffect(),
+                            changeDuration ? (effectConfig.isInfiniteDuration() ? MobEffectInstance.INFINITE_DURATION : effectConfig.duration * 20) : instanceIter.getDuration(),
+                            changeAmplifier ? effectConfig.amplifier : instanceIter.getAmplifier(),
+                            changeAmbient ? effectConfig.ambient : instanceIter.isAmbient(),
+                            changeVisible ? effectConfig.visible : instanceIter.isVisible(),
+                            changeIcon ? effectConfig.showIcon : instanceIter.showIcon(),
+                            ((MobEffectInstanceDuck) instanceIter).getHidden()
+                        );
+                        ((MobEffectInstanceDuck) rebuilt).setResponsibleStructure(structureId);
+                        serverPlayer.removeEffect(holderOpt.get());
+                        serverPlayer.addEffect(rebuilt);
+                    }
+                }
+
+                if (effectIds.isEmpty()) {
+                    outerIt.remove();
+                }
+            }
+        }
+    }
+
     @Override
-    public void setStructuresEffects(Map<String, Set<Long>> structures_features$effects) {
+    public void setStructuresEffects(Map<Long, Set<String>> structures_features$effects) {
+        System.out.println("Set structures effects to: " + structures_features$effects);
         this.structures_features$effects = structures_features$effects;
     }
 
@@ -237,7 +323,7 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
     }
 
     @Override
-    public Map<String, Set<Long>> getStructuresEffects() {
+    public Map<Long, Set<String>> getStructuresEffects() {
         return this.structures_features$effects;
     }
 
@@ -245,63 +331,4 @@ public class ServerPlayerMixin implements ServerPlayerDuck {
     public Set<StructureObject> getStructureObjects() {
         return this.structures_features$structures;
     }
-
-    // ----- 1.21.6+ -----
-    /*@Group(name = "save_data", min = 1, max = 2)
-    @Inject(
-        method = "addAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueOutput;)V",
-        at = @At("TAIL"),
-        require = 0
-    )
-    private void onSaveAdditionalData(@Coerce Object valueOutput, CallbackInfo ci) {
-        // Map<String, Set<Long>> -> Codec<Map<String, List<Long>>>
-        var EFFECTS_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(Codec.LONG));
-
-        // 1) effectsDeadline : map<string, list<long>>
-        java.util.Map<String, java.util.List<Long>> effectsForCodec = new java.util.HashMap<>();
-        for (var e : structures_features$effects.entrySet()) {
-            effectsForCodec.put(
-                    e.getKey(),
-                    e.getValue().stream().map(Long::longValue).toList()
-            );
-        }
-        Compat_ValueOutput.store(valueOutput, "effectsDeadline", EFFECTS_CODEC, effectsForCodec);
-
-        // 2) structures : list<long> (ids)
-        var ids = structures_features$structures.stream()
-                .map(s -> s.getId())
-                .map(Long::longValue)
-                .toList();
-
-        Compat_ValueOutput.store(valueOutput,"structures", Codec.list(Codec.LONG), ids);
-    }
-
-    @Group(name = "load_data", min = 1, max = 2)
-    @Inject(
-        method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V",
-        at = @At("TAIL"),
-        require = 0
-    )
-    private void onReadAdditionalData(@Coerce Object valueInput, CallbackInfo ci) {
-        // mêmes Codecs que côté save
-        var EFFECTS_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(Codec.LONG));
-        var LONG_LIST     = Codec.list(Codec.LONG);
-
-        // Réinit
-        this.structures_features$effects = new java.util.HashMap<>();
-
-        // 1) effectsDeadline
-        var effectsMap = Compat_ValueInput.read(valueInput, "effectsDeadline", EFFECTS_CODEC).orElse(java.util.Map.of());
-        for (var e : effectsMap.entrySet()) {
-            java.util.Set<Long> set = new java.util.HashSet<>(e.getValue());
-            this.structures_features$effects.put(e.getKey(), set);
-        }
-
-        // 2) structures
-        var ids = Compat_ValueInput.read(valueInput, "structures", LONG_LIST).orElse(java.util.List.of());
-        for (long id : ids) {
-            var so = StructuresStorage.getStructureAtId(id);
-            if (so != null) this.structures_features$structures.add(so);
-        }
-    }*/
 }

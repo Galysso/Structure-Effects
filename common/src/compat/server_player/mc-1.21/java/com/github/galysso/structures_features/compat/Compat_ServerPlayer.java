@@ -7,10 +7,7 @@ import com.github.galysso.structures_features.duck.ServerPlayerDuck;
 import com.github.galysso.structures_features.util.StructureNaming;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,16 +31,22 @@ public class Compat_ServerPlayer {
             throw new IllegalArgumentException("Expected CompoundTag, got: " + outputObject.getClass());
         }
 
+        // Effects currently applied to the player
         CompoundTag outer = new CompoundTag();
-        for (Map.Entry<String, Set<Long>> e : ((ServerPlayerDuck) player).getStructuresEffects().entrySet()) {
-            ListTag inner = new ListTag();
-            for (Long kv : e.getValue()) {
-                inner.add(LongTag.valueOf(kv));
+        for (var e : ((ServerPlayerDuck) player).getStructuresEffects().entrySet()) {
+            ListTag listTag = new ListTag();
+            for (String value : e.getValue()) {
+                if (value != null) {
+                    listTag.add(StringTag.valueOf(value));   // <-- liste de strings
+                }
             }
-            outer.put(e.getKey(), inner);
+            outer.put(e.getKey().toString(), listTag);          // <-- tableau de longs
         }
-        compoundTag.put("effectsDeadline", outer);
+        compoundTag.put("structures_effects", outer);
 
+        System.out.println("Saving structures: " + outer);
+
+        // Structures at the current player location
         compoundTag.putLongArray(
             "structures",
             ((ServerPlayerDuck) player).getStructureObjects().stream().mapToLong(StructureObject::getId).toArray()
@@ -55,25 +58,26 @@ public class Compat_ServerPlayer {
             throw new IllegalArgumentException("Expected CompoundTag, got: " + inputObject.getClass());
         }
 
-        Map<String, Set<Long>> structures_effects = new java.util.HashMap<>();
+        Map<Long, Set<String>> structures_effects = new java.util.HashMap<>();
 
-        Optional<CompoundTag> outerOpt = Compat_NBT.getCompound(compoundTag, "effectsDeadline");
+        // Effects applied to the player (before logging out)
+        Optional<CompoundTag> outerOpt = Compat_NBT.getCompound(compoundTag, "structures_effects");
         if (outerOpt.isPresent()) {
             for (String outerKey : Compat_NBT.getKeysSet(outerOpt.get())) {
-                Optional<ListTag> idsOpt = Compat_NBT.getList(outerOpt.get(), outerKey, CompoundTag.TAG_LONG);
+                Optional<ListTag> idsOpt = Compat_NBT.getList(outerOpt.get(), outerKey, Tag.TAG_STRING);
                 if (idsOpt.isEmpty()) continue;
 
-                Set<Long> set = new java.util.HashSet<>();
-                for (Tag id : idsOpt.get()) {
-                    Optional<Long> idOpt = Compat_NBT.tagToLong(id);
-                    if (idOpt.isEmpty()) continue;
-                    set.add(idOpt.get());
+                Set<String> set = new java.util.HashSet<>();
+                for (int i = 0; i < idsOpt.get().size(); i++) {
+                    Optional<String> idOpt = Compat_NBT.getStringFromList(idsOpt.get(), i);
+                    idOpt.ifPresent(set::add);
                 }
-                structures_effects.put(outerKey, set);
+                structures_effects.put(Long.parseLong(outerKey), set);
             }
         }
         ((ServerPlayerDuck) player).setStructuresEffects(structures_effects);
 
+        // Structures at the player location (before logging out)
         Set<StructureObject> structureObjects = new java.util.HashSet<>();
         Optional<long[]> idsOpt = Compat_NBT.getLongArray(compoundTag, "structures");
         if (idsOpt.isPresent()) {

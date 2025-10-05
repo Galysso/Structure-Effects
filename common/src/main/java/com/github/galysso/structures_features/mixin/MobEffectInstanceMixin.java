@@ -91,37 +91,6 @@ public abstract class MobEffectInstanceMixin implements MobEffectInstanceDuck {
         };
     }
 
-    /*@Group(name="saveData", min=1, max=1)
-    @Inject(
-        method = "save",
-        at = @At("RETURN"),
-        require = 0
-    )
-    private void structures_features$saveMarker_1_21(CallbackInfoReturnable<Tag> cir) {
-        Tag ret = cir.getReturnValue();
-        if (ret instanceof CompoundTag ct) {
-            ct.putLong("responsibleStructure", responsibleStructure);
-        }
-    }
-
-    @Group(name="loadData", min=1, max=1)
-    @Inject(
-        method = "load",
-        at = @At("RETURN"),
-        require = 0
-    )
-    private static void structures_features$loadMarker_1_21(CompoundTag input, CallbackInfoReturnable<MobEffectInstance> cir) {
-        MobEffectInstance inst = cir.getReturnValue();
-        if (inst != null) {
-            Optional<Long> structureId = Compat_NBT.getLong(input, "responsibleStructure");
-            if (structureId.isPresent()) {
-                ((MobEffectInstanceDuck) (Object) inst).setResponsibleStructure(structureId.get());
-            } else {
-                ((MobEffectInstanceDuck) (Object) inst).setResponsibleStructure(-1L);
-            }
-        }
-    }*/
-
     @Inject(
         method = "setDetailsFrom",
         at = @At("TAIL"),

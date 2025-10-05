@@ -1,7 +1,6 @@
 package com.github.galysso.structures_features.config.server.elements;
 
 public class EffectConfig {
-    public String effectId;
     public int amplifier;
     public int duration;
     public boolean ambient;
@@ -10,7 +9,6 @@ public class EffectConfig {
     public boolean clearedWhenLeaving;
 
     public EffectConfig(
-        String effectId,
         int amplifier,
         int duration,
         boolean ambient,
@@ -18,7 +16,6 @@ public class EffectConfig {
         boolean showIcon,
         boolean clearedWhenLeaving
     ) {
-        this.effectId = effectId;
         this.amplifier = amplifier;
         this.duration = duration;
         this.ambient = ambient;
@@ -29,13 +26,16 @@ public class EffectConfig {
 
     public EffectConfig() {
         this(
-            "minecraft:regeneration",
             0,
-            0,
+            60,
             true,
             true,
             true,
             true
         );
+    }
+
+    public boolean isInfiniteDuration() {
+        return duration < 0;
     }
 }

@@ -34,7 +34,6 @@ public final class StructureObject {
     }
 
     /* ----- FAST IDENTIFICATION ----- */
-
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
@@ -48,7 +47,6 @@ public final class StructureObject {
     }
 
     /* ----- GETTERS / SETTERS ----- */
-
     public long getId() {
         return id;
     }
@@ -66,7 +64,6 @@ public final class StructureObject {
     }
 
     /* ----- NBT SERIALIZATION ----- */
-
     void writeNbt(CompoundTag nbt) {
         nbt.putLong("id", id);
         nbt.putString("structure_id", structureId != null ? structureId.toString() : "");
